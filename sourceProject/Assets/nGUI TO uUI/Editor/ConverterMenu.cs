@@ -36,15 +36,12 @@ public class ConverterMenu : MonoBehaviour {
 	#region Convert Atlases In Scene
 	[MenuItem ("nGUI TO uGUI/Atlas Convert/Current Scene")]
 	static void OnConvertAtlasesInScene () {
-		UISprite[] FoundAtlasesList;
-		FoundAtlasesList = GameObject.FindObjectsOfType<UISprite>();
+		UISprite[] FoundAtlasesList = GameObject.FindObjectsOfType<UISprite>();
 		for (int c=0; c<FoundAtlasesList.Length; c++){
-			UIAtlas tempNguiAtlas;
-			tempNguiAtlas = FoundAtlasesList[c].atlas;
-			if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+tempNguiAtlas.name+".png")){
-				Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
+			if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+ FoundAtlasesList[c].atlas.texture.name+".png")){
+				Debug.Log ("The Atlas <color=yellow>" + FoundAtlasesList[c].atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
 			}else{
-				ConvertAtlas(tempNguiAtlas);
+				ConvertAtlas(FoundAtlasesList[c]);
 			}
 		}
 	}
@@ -56,8 +53,7 @@ public class ConverterMenu : MonoBehaviour {
 		if (Selection.activeGameObject != null){
 			foreach(GameObject selectedObject in Selection.gameObjects){
 				if (selectedObject.GetComponent<UISprite>()){
-					UIAtlas tempNguiAtlas;
-					tempNguiAtlas = selectedObject.GetComponent<UISprite>().atlas;
+					UISprite tempNguiAtlas = selectedObject.GetComponent<UISprite>();
 					if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+tempNguiAtlas.name+".png")){
 						Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
 					}else{
@@ -70,27 +66,65 @@ public class ConverterMenu : MonoBehaviour {
 	#endregion
 
 	#region PROCEDURALS Convert Atlas
-	static void ConvertAtlas(UIAtlas theAtlas){
+	static void ConvertAtlas(UIAtlas atlas)
+	{
+		if (!Directory.Exists("Assets/nGUI TO uUI/CONVERSION_DATA"))
+		{
+			AssetDatabase.CreateFolder("Assets", "nGUI TO uUI/CONVERSION_DATA");
+		}
+		else
+		{
+
+		}
+		AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(atlas.name)[0]), "Assets/nGUI TO uUI/CONVERSION_DATA/" + atlas.name + ".png");
+		AssetDatabase.Refresh();
+		//Debug.Log(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(theAtlas.name)[0]) + "\n" + "Assets/nGUI TO uUI/CONVERSION_DATA/"+theAtlas.name+".png");
+
+		string conversionPath = "Assets/nGUI TO uUI/CONVERSION_DATA/" + atlas.name + ".png";
+		TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(conversionPath);
+		importer.textureType = TextureImporterType.Sprite;
+		importer.mipmapEnabled = false;
+		importer.spriteImportMode = SpriteImportMode.Multiple;
+
+		List<UISpriteData> theNGUISpritesList = atlas.spriteList;
+		SpriteMetaData[] theSheet = new SpriteMetaData[theNGUISpritesList.Count];
+
+		for (int c = 0; c < theNGUISpritesList.Count; c++)
+		{
+			float theY = atlas.texture.height - (theNGUISpritesList[c].y + theNGUISpritesList[c].height);
+			theSheet[c].name = theNGUISpritesList[c].name;
+			theSheet[c].pivot = new Vector2(theNGUISpritesList[c].paddingLeft, theNGUISpritesList[c].paddingBottom);
+			theSheet[c].rect = new Rect(theNGUISpritesList[c].x, theY, theNGUISpritesList[c].width, theNGUISpritesList[c].height);
+			theSheet[c].border = new Vector4(theNGUISpritesList[c].borderLeft, theNGUISpritesList[c].borderBottom, theNGUISpritesList[c].borderRight, theNGUISpritesList[c].borderTop);
+			theSheet[c].alignment = 0;
+			Debug.Log(theSheet[c].name + "       " + theSheet[c].pivot);
+		}
+		importer.spritesheet = theSheet;
+		AssetDatabase.ImportAsset(conversionPath, ImportAssetOptions.ForceUpdate);
+	}
+
+
+	static void ConvertAtlas(UISprite uISprite){
 		if(!Directory.Exists("Assets/nGUI TO uUI/CONVERSION_DATA")){
 			AssetDatabase.CreateFolder ("Assets", "nGUI TO uUI/CONVERSION_DATA");
 		}else{
 			
 		}
-		AssetDatabase.CopyAsset (AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(theAtlas.name)[0]), "Assets/nGUI TO uUI/CONVERSION_DATA/"+theAtlas.name+".png");
+		AssetDatabase.CopyAsset (AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(uISprite.atlas.texture.name)[0]), "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png");
 		AssetDatabase.Refresh();
 		//Debug.Log(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(theAtlas.name)[0]) + "\n" + "Assets/nGUI TO uUI/CONVERSION_DATA/"+theAtlas.name+".png");
 		
-		string conversionPath = "Assets/nGUI TO uUI/CONVERSION_DATA/"+theAtlas.name+".png";
+		string conversionPath = "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png";
 		TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(conversionPath);
 		importer.textureType = TextureImporterType.Sprite;
 		importer.mipmapEnabled = false;
 		importer.spriteImportMode = SpriteImportMode.Multiple;
 		
-		List <UISpriteData> theNGUISpritesList = theAtlas.spriteList;
+		List <UISpriteData> theNGUISpritesList = uISprite.atlas.spriteList;
 		SpriteMetaData[] theSheet = new SpriteMetaData[theNGUISpritesList.Count];
 		
 		for (int c=0; c<theNGUISpritesList.Count; c++){
-			float theY = theAtlas.texture.height - (theNGUISpritesList[c].y + theNGUISpritesList[c].height);
+			float theY = uISprite.atlas.texture.height - (theNGUISpritesList[c].y + theNGUISpritesList[c].height);
 			theSheet[c].name = theNGUISpritesList[c].name;
 			theSheet[c].pivot = new Vector2(theNGUISpritesList[c].paddingLeft, theNGUISpritesList[c].paddingBottom);
 			theSheet[c].rect = new Rect (theNGUISpritesList[c].x, theY, theNGUISpritesList[c].width, theNGUISpritesList[c].height);
@@ -250,13 +284,11 @@ public class ConverterMenu : MonoBehaviour {
 	#region UISprites Converter
 	static void OnConvertUISprite(GameObject selectedObject, bool isSubConvert){
 		GameObject tempObject;
-
-		UIAtlas tempNguiAtlas;
-		tempNguiAtlas = selectedObject.GetComponent<UISprite>().atlas;
-		if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+tempNguiAtlas.name+".png")){
-			Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
+		UISprite sprite = selectedObject.GetComponent<UISprite>();
+		if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+ sprite.atlas.texture.name+".png")){
+			Debug.Log ("The Atlas <color=yellow>" + sprite.atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
 		}else{
-			ConvertAtlas(tempNguiAtlas);
+			ConvertAtlas(sprite);
 		}
 
 		tempObject = selectedObject;
@@ -275,22 +307,20 @@ public class ConverterMenu : MonoBehaviour {
 		
 		//to easliy control the old and the new sprites and buttons
 		Image addedImage;
-		UISprite originalSprite;
-
 		//define the objects of the previous variables
 		if (tempObject.GetComponent<Image>()){
 			addedImage = tempObject.GetComponent<Image>();
 		}else{
 			addedImage = tempObject.AddComponent<Image>();
 		}
-		originalSprite = selectedObject.GetComponent<UISprite>();
+		UISprite originalSprite = selectedObject.GetComponent<UISprite>();
 
 		//adjust the rect transform to fit the original one's size
 		tempObject.GetComponent<RectTransform>().pivot = originalSprite.pivotOffset;
 		tempObject.GetComponent<RectTransform>().sizeDelta = originalSprite.localSize;
 		tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 		
-		Sprite[] sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalSprite.atlas.name + ".png").OfType<Sprite>().ToArray();
+		Sprite[] sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalSprite.atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 		for (int c=0; c<sprites.Length; c++){
 			if (sprites[c].name == originalSprite.spriteName){
 				addedImage.sprite = sprites[c];
@@ -361,7 +391,11 @@ public class ConverterMenu : MonoBehaviour {
 			tempText.text = originalText.text;
 			tempText.color = originalText.color;
 			tempText.gameObject.GetComponent<RectTransform>().sizeDelta = originalText.localSize;
-			tempText.font = (Font)AssetDatabase.LoadAssetAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/FONTS/"+originalText.bitmapFont.name+".ttf", typeof(Font));
+
+			// 获得系统字体名称列表  // 获得某种字体
+			string[] systemFontNames = Font.GetOSInstalledFontNames();
+			Font font = Font.CreateDynamicFontFromOSFont(systemFontNames[0], 36);
+			tempText.font = originalText.font.dynamicFont == null ? font : originalText.font.dynamicFont;
 			tempText.fontSize = originalText.fontSize-2;
 			if (originalText.spacingY != 0){
 				tempText.lineSpacing = 1 /*originalText.spacingY*/;
@@ -458,9 +492,9 @@ public class ConverterMenu : MonoBehaviour {
 			//if the object ahve no UISprites, then a sub object must have!
 			Sprite[] sprites;
 			if (originalButton.GetComponent<UISprite>()){
-				sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalButton.GetComponent<UISprite>().atlas.name + ".png").OfType<Sprite>().ToArray();
+				sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalButton.GetComponent<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 			}else{
-				sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalButton.gameObject.GetComponentInChildren<UISprite>().atlas.name + ".png").OfType<Sprite>().ToArray();
+				sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalButton.gameObject.GetComponentInChildren<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 			}
 
 			if (tempObject.gameObject.GetComponent<UIToggle>()){
@@ -575,7 +609,7 @@ public class ConverterMenu : MonoBehaviour {
 			for (int x=0; x< childImages.Length; x++){
 				if (childImages[x].spriteName == tempObject.GetComponent<UIToggle>().activeSprite.gameObject.GetComponent<UISprite>().spriteName){
 					Sprite[] sprites;
-					sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + childImages[x].atlas.name + ".png").OfType<Sprite>().ToArray();
+					sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + childImages[x].atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 					for (int c=0; c<sprites.Length; c++){
 						if (sprites[c].name == childImages[x].spriteName){
 							addedToggleController.m_Sprite = sprites[c];
