@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2015 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2020 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 
@@ -13,9 +13,9 @@ using UnityEngine;
 public class UIButtonScale : MonoBehaviour
 {
 	public Transform tweenTarget;
-	public Vector3 hover = new Vector3(1.1f, 1.1f, 1.1f);
-	public Vector3 pressed = new Vector3(1.05f, 1.05f, 1.05f);
-	public float duration = 0.2f;
+	public Vector3 hover = new Vector3(1.0f, 1.0f, 1.0f);
+	public Vector3 pressed = new Vector3(0.95f, 0.95f, 0.95f);
+	public float duration = 0.1f;
 
 	Vector3 mScale;
 	bool mStarted = false;

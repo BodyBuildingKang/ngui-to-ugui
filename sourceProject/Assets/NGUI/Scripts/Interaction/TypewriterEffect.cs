@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2015 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2020 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Text;
@@ -24,40 +24,22 @@ public class TypewriterEffect : MonoBehaviour
 		public float alpha;
 	}
 
-	/// <summary>
-	/// How many characters will be printed per second.
-	/// </summary>
-
+	[Tooltip("How many characters will be printed per second.")]
 	public int charsPerSecond = 20;
 
-	/// <summary>
-	/// How long it takes for each character to fade in.
-	/// </summary>
-
+	[Tooltip("How long it takes for each character to fade in.")]
 	public float fadeInTime = 0f;
 
-	/// <summary>
-	/// How long to pause when a period is encountered (in seconds).
-	/// </summary>
-
+	[Tooltip("How long to pause when a period is encountered (in seconds).")]
 	public float delayOnPeriod = 0f;
 
-	/// <summary>
-	/// How long to pause when a new line character is encountered (in seconds).
-	/// </summary>
-
+	[Tooltip("How long to pause when a new line character is encountered (in seconds).")]
 	public float delayOnNewLine = 0f;
 
-	/// <summary>
-	/// If a scroll view is specified, its UpdatePosition() function will be called every time the text is updated.
-	/// </summary>
-
+	[Tooltip("If a scroll view is specified, its UpdatePosition() function will be called every time the text is updated.")]
 	public UIScrollView scrollView;
 
-	/// <summary>
-	/// If set to 'true', the label's dimensions will be that of a fully faded-in content.
-	/// </summary>
-
+	[Tooltip("If set to 'true', the label's dimensions will be that of a fully faded-in content.")]
 	public bool keepFullDimensions = false;
 
 	/// <summary>
@@ -67,7 +49,8 @@ public class TypewriterEffect : MonoBehaviour
 	public List<EventDelegate> onFinished = new List<EventDelegate>();
 
 	UILabel mLabel;
-	string mFullText = "";
+	string mFullText;
+	string mMyText;
 	int mCurrentOffset = 0;
 	float mNextChar = 0f;
 	bool mReset = true;
@@ -87,11 +70,17 @@ public class TypewriterEffect : MonoBehaviour
 
 	public void ResetToBeginning ()
 	{
-		Finish();
+		if (mActive && mLabel != null && !string.IsNullOrEmpty(mFullText) && mMyText == mLabel.text)
+		{
+			mMyText = mFullText;
+			mLabel.text = mMyText;
+		}
+
+		mCurrentOffset = 0;
 		mReset = true;
 		mActive = true;
-		mNextChar = 0f;
-		mCurrentOffset = 0;
+		mFade.Clear();
+
 		Update();
 	}
 
@@ -105,12 +94,15 @@ public class TypewriterEffect : MonoBehaviour
 		{
 			mActive = false;
 
-			if (!mReset)
+			if (!string.IsNullOrEmpty(mFullText))
 			{
+				if (!mReset && mLabel != null && mMyText == mLabel.text) mLabel.text = mFullText;
+
+				mMyText = mFullText;
 				mCurrentOffset = mFullText.Length;
-				mFade.Clear();
-				mLabel.text = mFullText;
 			}
+
+			mFade.Clear();
 
 			if (keepFullDimensions && scrollView != null)
 				scrollView.UpdatePosition();
@@ -123,46 +115,86 @@ public class TypewriterEffect : MonoBehaviour
 
 	void OnEnable () { mReset = true; mActive = true; }
 
+	void OnDisable () { Finish(); }
+
+	void OnApplicationQuit () { onFinished = null; }
+
 	void Update ()
 	{
 		if (!mActive) return;
 
+		if (mLabel != null && mLabel.text != mMyText) mReset = true;
+
 		if (mReset)
 		{
-			mCurrentOffset = 0;
 			mReset = false;
+			mNextChar = 0f;
+			mCurrentOffset = 0;
 			mLabel = GetComponent<UILabel>();
 			mFullText = mLabel.processedText;
+			mMyText = mFullText;
 			mFade.Clear();
 
 			if (keepFullDimensions && scrollView != null) scrollView.UpdatePosition();
 		}
 
-		while (mCurrentOffset < mFullText.Length && mNextChar <= RealTime.time)
+		if (string.IsNullOrEmpty(mFullText)) return;
+
+		var len = mFullText.Length;
+
+		while (mCurrentOffset < len && mNextChar <= RealTime.time)
 		{
 			int lastOffset = mCurrentOffset;
 			charsPerSecond = Mathf.Max(1, charsPerSecond);
 
 			// Automatically skip all symbols
-			while (NGUIText.ParseSymbol(mFullText, ref mCurrentOffset)) { }
+			if (mLabel.supportEncoding)
+			{
+				NGUIText.nguiFont = mLabel.font;
+
+				for (; ; )
+				{
+					if (NGUIText.ParseSymbol(mFullText, ref mCurrentOffset)) continue;
+
+					var sym = NGUIText.GetSymbol(ref mFullText, mCurrentOffset, len);
+
+					if (sym != null)
+					{
+						mCurrentOffset += sym.length - 1;
+						continue;
+					}
+					break;
+				}
+			}
+
 			++mCurrentOffset;
 
 			// Reached the end? We're done.
-			if (mCurrentOffset > mFullText.Length) break;
+			if (mCurrentOffset > len) break;
 
 			// Periods and end-of-line characters should pause for a longer time.
 			float delay = 1f / charsPerSecond;
-			char c = (lastOffset < mFullText.Length) ? mFullText[lastOffset] : '\n';
+			char c = (lastOffset < len) ? mFullText[lastOffset] : '\n';
+			var next = (lastOffset + 1 < len) ? mFullText[lastOffset + 1] : '\n';
 
 			if (c == '\n')
 			{
-				delay += delayOnNewLine;
+				if (lastOffset > 0)
+				{
+					var prev = mFullText[lastOffset - 1];
+
+					if (prev == '\n')
+					{
+						delay += delayOnNewLine;
+					}
+					else if (prev == '.' || prev == ']') delay += Mathf.Max(0f, delayOnNewLine - delayOnPeriod);
+				}
 			}
-			else if (lastOffset + 1 == mFullText.Length || mFullText[lastOffset + 1] <= ' ')
+			else if (lastOffset + 1 == len || next <= ' ' || next == '[')
 			{
 				if (c == '.')
 				{
-					if (lastOffset + 2 < mFullText.Length && mFullText[lastOffset + 1] == '.' && mFullText[lastOffset + 2] == '.')
+					if (lastOffset + 2 < len && next == '.' && mFullText[lastOffset + 2] == '.')
 					{
 						delay += delayOnPeriod * 3f;
 						lastOffset += 2;
@@ -193,9 +225,10 @@ public class TypewriterEffect : MonoBehaviour
 			else
 			{
 				// No smooth fading necessary
-				mLabel.text = keepFullDimensions ?
+				mMyText = keepFullDimensions ?
 					mFullText.Substring(0, mCurrentOffset) + "[00]" + mFullText.Substring(mCurrentOffset) :
 					mFullText.Substring(0, mCurrentOffset);
+				mLabel.text = mMyText;
 
 				// If a scroll view was specified, update its position
 				if (!keepFullDimensions && scrollView != null) scrollView.UpdatePosition();
@@ -203,16 +236,25 @@ public class TypewriterEffect : MonoBehaviour
 		}
 
 		// Alpha-based fading
-		if (mFade.size != 0)
+		if (mCurrentOffset >= len && mFade.size == 0)
+		{
+			mMyText = mFullText;
+			mLabel.text = mMyText;
+			current = this;
+			EventDelegate.Execute(onFinished);
+			current = null;
+			mActive = false;
+		}
+		else if (mFade.size != 0)
 		{
 			for (int i = 0; i < mFade.size; )
 			{
-				FadeEntry fe = mFade[i];
+				var fe = mFade.buffer[i];
 				fe.alpha += RealTime.deltaTime / fadeInTime;
-				
+
 				if (fe.alpha < 1f)
 				{
-					mFade[i] = fe;
+					mFade.buffer[i] = fe;
 					++i;
 				}
 				else mFade.RemoveAt(i);
@@ -220,16 +262,25 @@ public class TypewriterEffect : MonoBehaviour
 
 			if (mFade.size == 0)
 			{
-				if (keepFullDimensions) mLabel.text = mFullText.Substring(0, mCurrentOffset) + "[00]" + mFullText.Substring(mCurrentOffset);
-				else mLabel.text = mFullText.Substring(0, mCurrentOffset);
+				if (mCurrentOffset < len)
+				{
+					if (keepFullDimensions)
+					{
+						mMyText = mFullText.Substring(0, mCurrentOffset) + "[00]" + mFullText.Substring(mCurrentOffset);
+					}
+					else mMyText = mFullText.Substring(0, mCurrentOffset);
+
+					mLabel.text = mMyText;
+				}
+				else return;
 			}
 			else
 			{
-				StringBuilder sb = new StringBuilder();
+				var sb = new StringBuilder();
 
 				for (int i = 0; i < mFade.size; ++i)
 				{
-					FadeEntry fe = mFade[i];
+					var fe = mFade.buffer[i];
 
 					if (i == 0)
 					{
@@ -242,21 +293,15 @@ public class TypewriterEffect : MonoBehaviour
 					sb.Append(fe.text);
 				}
 
-				if (keepFullDimensions)
+				if (keepFullDimensions && mCurrentOffset < len)
 				{
 					sb.Append("[00]");
 					sb.Append(mFullText.Substring(mCurrentOffset));
 				}
 
-				mLabel.text = sb.ToString();
+				mMyText = sb.ToString();
+				mLabel.text = mMyText;
 			}
-		}
-		else if (mCurrentOffset == mFullText.Length)
-		{
-			current = this;
-			EventDelegate.Execute(onFinished);
-			current = null;
-			mActive = false;
 		}
 	}
 }

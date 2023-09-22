@@ -1,7 +1,7 @@
-//----------------------------------------------
+//-------------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2015 Tasharen Entertainment
-//----------------------------------------------
+// Copyright © 2011-2020 Tasharen Entertainment Inc
+//-------------------------------------------------
 
 using UnityEngine;
 using System.Collections.Generic;
@@ -182,7 +182,7 @@ public class UIPlayAnimation : MonoBehaviour
 	void OnPress (bool isPressed)
 	{
 		if (!enabled) return;
-		if (UICamera.currentTouchID < -1) return;
+		if (UICamera.currentTouchID == -2 || UICamera.currentTouchID == -3) return;
 		if ( trigger == Trigger.OnPress ||
 			(trigger == Trigger.OnPressTrue && isPressed) ||
 			(trigger == Trigger.OnPressFalse && !isPressed))
@@ -191,13 +191,13 @@ public class UIPlayAnimation : MonoBehaviour
 
 	void OnClick ()
 	{
-		if (UICamera.currentTouchID < -1) return;
+		if (UICamera.currentTouchID == -2 || UICamera.currentTouchID == -3) return;
 		if (enabled && trigger == Trigger.OnClick) Play(true, false);
 	}
 
 	void OnDoubleClick ()
 	{
-		if (UICamera.currentTouchID < -1) return;
+		if (UICamera.currentTouchID == -2 || UICamera.currentTouchID == -3) return;
 		if (enabled && trigger == Trigger.OnDoubleClick) Play(true, false);
 	}
 
@@ -263,9 +263,9 @@ public class UIPlayAnimation : MonoBehaviour
 			if (clearSelection && UICamera.selectedObject == gameObject)
 				UICamera.selectedObject = null;
 
-			int pd = -(int)playDirection;
-			Direction dir = forward ? playDirection : ((Direction)pd);
-			ActiveAnimation anim = target ?
+			var pd = -(int)playDirection;
+			var dir = forward ? playDirection : ((Direction)pd);
+			var anim = target ?
 				ActiveAnimation.Play(target, clipName, dir, ifDisabledOnPlay, disableWhenFinished) :
 				ActiveAnimation.Play(animator, clipName, dir, ifDisabledOnPlay, disableWhenFinished);
 
@@ -277,6 +277,18 @@ public class UIPlayAnimation : MonoBehaviour
 			}
 		}
 	}
+
+	/// <summary>
+	/// Play the tween forward.
+	/// </summary>
+
+	public void PlayForward () { Play(true); }
+
+	/// <summary>
+	/// Play the tween in reverse.
+	/// </summary>
+
+	public void PlayReverse () { Play(false); }
 
 	/// <summary>
 	/// Callback triggered when each tween executed by this script finishes.
