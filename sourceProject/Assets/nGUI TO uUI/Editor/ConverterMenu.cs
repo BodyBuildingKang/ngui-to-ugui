@@ -106,15 +106,12 @@ public class ConverterMenu : MonoBehaviour {
 
 	static void ConvertAtlas(UISprite uISprite){
 		if(!Directory.Exists("Assets/nGUI TO uUI/CONVERSION_DATA")){
-			AssetDatabase.CreateFolder ("Assets", "nGUI TO uUI/CONVERSION_DATA");
-		}else{
-			
+			AssetDatabase.CreateFolder ("Assets/nGUI TO uUI", "CONVERSION_DATA");
 		}
-		AssetDatabase.CopyAsset (AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(uISprite.atlas.texture.name)[0]), "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png");
+		string originPath = AssetDatabase.GetAssetPath(uISprite.atlas.texture as Object);
+		AssetDatabase.CopyAsset(originPath, "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png");
 		AssetDatabase.Refresh();
-		//Debug.Log(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(theAtlas.name)[0]) + "\n" + "Assets/nGUI TO uUI/CONVERSION_DATA/"+theAtlas.name+".png");
-		
-		string conversionPath = "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png";
+        string conversionPath = "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png";
 		TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(conversionPath);
 		importer.textureType = TextureImporterType.Sprite;
 		importer.mipmapEnabled = false;
