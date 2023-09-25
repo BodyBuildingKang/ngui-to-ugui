@@ -12,7 +12,7 @@ using System.Collections.Generic;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(UIToggle))]
-[AddComponentMenu("NGUI/Interaction/Toggled Components")]
+[AddComponentMenu("NGUI/Interaction/UIToggledComponents")]
 public class UIToggledComponents : MonoBehaviour
 {
 	public List<MonoBehaviour> activate;

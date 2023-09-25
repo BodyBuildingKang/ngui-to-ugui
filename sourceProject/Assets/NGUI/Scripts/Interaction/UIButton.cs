@@ -10,7 +10,7 @@ using System.Collections.Generic;
 /// Similar to UIButtonColor, but adds a 'disabled' state based on whether the collider is enabled or not.
 /// </summary>
 
-[AddComponentMenu("NGUI/Interaction/Button")]
+[AddComponentMenu("NGUI/Interaction/UIButton")]
 public class UIButton : UIButtonColor
 {
 	/// <summary>

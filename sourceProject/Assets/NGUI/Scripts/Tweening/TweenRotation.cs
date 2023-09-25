@@ -9,7 +9,7 @@ using UnityEngine;
 /// Tween the object's rotation.
 /// </summary>
 
-[AddComponentMenu("NGUI/Tween/Tween Rotation")]
+[AddComponentMenu("NGUI/Tween/TweenRotation")]
 public class TweenRotation : UITweener
 {
 	public Vector3 from;

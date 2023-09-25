@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// </summary>
 
 [ExecuteInEditMode]
-[AddComponentMenu("NGUI/UI/Invisible Widget")]
+[AddComponentMenu("NGUI/UI/UIWidget")]
 public class UIWidget : UIRect
 {
 	[DoNotObfuscateNGUI] public enum Pivot

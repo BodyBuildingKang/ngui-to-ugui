@@ -10,7 +10,7 @@ using UnityEngine;
 /// </summary>
 
 [ExecuteInEditMode]
-[AddComponentMenu("NGUI/Interaction/NGUI Scroll Bar")]
+[AddComponentMenu("NGUI/Interaction/UIScrollBar")]
 public class UIScrollBar : UISlider
 {
 	enum Direction

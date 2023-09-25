@@ -11,7 +11,7 @@ using System.Collections.Generic;
 /// </summary>
 
 [ExecuteInEditMode]
-[AddComponentMenu("NGUI/UI/Sprite")]
+[AddComponentMenu("NGUI/UI/UISprite")]
 public class UISprite : UIBasicSprite
 {
 	// Cached and saved values

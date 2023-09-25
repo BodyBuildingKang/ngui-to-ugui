@@ -72,10 +72,7 @@ public class ConverterMenu : MonoBehaviour {
 		{
 			AssetDatabase.CreateFolder("Assets", "nGUI TO uUI/CONVERSION_DATA");
 		}
-		else
-		{
 
-		}
 		AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(atlas.name)[0]), "Assets/nGUI TO uUI/CONVERSION_DATA/" + atlas.name + ".png");
 		AssetDatabase.Refresh();
 		//Debug.Log(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(theAtlas.name)[0]) + "\n" + "Assets/nGUI TO uUI/CONVERSION_DATA/"+theAtlas.name+".png");
@@ -137,57 +134,101 @@ public class ConverterMenu : MonoBehaviour {
 	#region Convert Widget Selected
 	[MenuItem ("nGUI TO uGUI/Wedgit Convert/Selected")]
 	static void OnConvertWedgitSelected () {
-		GameObject inProgressObject;
 		if (Selection.activeGameObject != null){
-			foreach(GameObject selectedObject in Selection.gameObjects){
+			GameObject UGUIRoot = GameObject.Find("CanvasRoot");
+			Canvas canvasRoot = null;
+			if (UGUIRoot == null)
+            {
+				UGUIRoot = new GameObject("CanvasRoot");
+				canvasRoot = UGUIRoot.AddComponent<Canvas>();
+				canvasRoot.renderMode = RenderMode.ScreenSpaceOverlay;
+				CanvasScaler canvasScaler = UGUIRoot.AddComponent<CanvasScaler>();
+				GraphicRaycaster graphic = UGUIRoot.AddComponent<GraphicRaycaster>();
+				canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+				canvasScaler.referenceResolution = new Vector2(720, 1080);
+            }
+            else
+            {
+				canvasRoot = UGUIRoot.GetComponent<Canvas>();
+			}
 
-				inProgressObject = (GameObject) Instantiate (selectedObject, selectedObject.transform.position, selectedObject.transform.rotation);
+			foreach (GameObject selectedObject in Selection.gameObjects){
+
+				GameObject inProgressObject = (GameObject) Instantiate (selectedObject, selectedObject.transform.position, selectedObject.transform.rotation);
+				inProgressObject.name = selectedObject.name;
+
+				canvasRoot.renderMode = RenderMode.ScreenSpaceCamera;
+                if (selectedObject.transform.parent == null)
+                {
+					canvasRoot.worldCamera = selectedObject.transform.GetComponentInChildren<Camera>();
+				}
+                else
+                {
+					canvasRoot.worldCamera = selectedObject.transform.parent.GetComponentInChildren<Camera>(); // 子节点有存在多个 Camera 组件的情况？？？
+				}
+
+				// 加载创建 Canvas
+				UIRoot uIRoot = inProgressObject.GetComponent<UIRoot>();
+				if (uIRoot != null)
+                {
+					Canvas canvas = inProgressObject.AddComponent<Canvas>();
+					CanvasScaler canvasScaler = inProgressObject.AddComponent<CanvasScaler>();
+					GraphicRaycaster graphic = inProgressObject.AddComponent<GraphicRaycaster>();
+					canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+					UIPanel uIPanel = inProgressObject.GetComponent<UIPanel>();
+                    if (uIPanel != null)
+                    {
+						canvas.sortingOrder = uIPanel.depth;
+                    }
+
+					DestroyNGUI(uIRoot);
+					DestroyNGUI(uIPanel);
+				}
+       
+				inProgressObject.transform.SetParent(canvasRoot.transform);
+
 
 				if (selectedObject.GetComponent<UIWidget>()){
-					inProgressObject.name = selectedObject.name;
-					OnConvertUIWidget (inProgressObject, false);
+					OnConvertUIWidget (inProgressObject, canvasRoot, false);
 				}
 
 				if (selectedObject.GetComponent<UISprite>()){
-					inProgressObject.name = selectedObject.name;
-					OnConvertUISprite (inProgressObject, false);
+					OnConvertUISprite (inProgressObject, canvasRoot, false);
 				}
 
 				if (selectedObject.GetComponent<UILabel>()){
-					inProgressObject.name = selectedObject.name;
-					OnConvertUILabel (inProgressObject, false);
+					OnConvertUILabel (inProgressObject, canvasRoot, false);
 				}
 
 				if (selectedObject.GetComponent<UIToggle>()){
-					inProgressObject.name = selectedObject.name;
-					OnConvertUIToggle (inProgressObject, false);
+					OnConvertUIToggle (inProgressObject, canvasRoot, false);
 				}
 
 				if (selectedObject.GetComponent<UIInput>()){
-					inProgressObject.name = selectedObject.name;
-					OnConvertUIInput (inProgressObject, false);
+					OnConvertUIInput (inProgressObject, canvasRoot, false);
 				}
 
 				if (selectedObject.GetComponent<UIScrollBar>()){
 					inProgressObject.name = selectedObject.name;
-					OnConvertUIScrollBar (inProgressObject, false);
+					OnConvertUIScrollBar (inProgressObject, canvasRoot, false);
 				}
 
 				if (selectedObject.GetComponent<UISlider>()){
 					inProgressObject.name = selectedObject.name;
-					OnConvertUISlider (inProgressObject, false);
+					OnConvertUISlider (inProgressObject, canvasRoot, false);
 				}
 
 
 				if (selectedObject.GetComponent<UIButton>()){
 					inProgressObject.name = selectedObject.name;
-					OnConvertUIButton (inProgressObject, false);
+					OnConvertUIButton (inProgressObject, canvasRoot, false);
 				}
 
 #if PopupLists
 				if (selectedObject.GetComponent<UIPopupList>()){
 					inProgressObject.name = selectedObject.name;
-					OnConvertUIButton (inProgressObject, false);
+					OnConvertUIButton (inProgressObject, canvasRoot, false);
 				}
 #endif
 
@@ -205,82 +246,83 @@ public class ConverterMenu : MonoBehaviour {
 
 				for (int a=0; a<UIWidgetsOnChilderens.Length; a++){
 					if (!UIWidgetsOnChilderens[a].gameObject.GetComponent<RectTransform>()){
-						OnConvertUIWidget (UIWidgetsOnChilderens[a].gameObject, true);
+						OnConvertUIWidget (UIWidgetsOnChilderens[a].gameObject, canvasRoot, true);
 					}
 				}
 
 				for (int b=0; b<UISpritesOnChilderens.Length; b++){
-					OnConvertUISprite (UISpritesOnChilderens[b].gameObject, true);
+					OnConvertUISprite (UISpritesOnChilderens[b].gameObject, canvasRoot, true);
 				}
 
 				for (int c=0; c<UILablesOnChilderens.Length; c++){
-					OnConvertUILabel (UILablesOnChilderens[c].gameObject, true);
+					OnConvertUILabel (UILablesOnChilderens[c].gameObject, canvasRoot, true);
 				}
 
 				for (int d=0; d<UIButtonsOnChilderens.Length; d++){
-					OnConvertUIButton (UIButtonsOnChilderens[d].gameObject, true);
+					OnConvertUIButton (UIButtonsOnChilderens[d].gameObject, canvasRoot, true);
 				}
 
 				for (int e=0; e<UITogglesOnChilderens.Length; e++){
-					OnConvertUIToggle (UITogglesOnChilderens[e].gameObject, true);
+					OnConvertUIToggle (UITogglesOnChilderens[e].gameObject, canvasRoot, true);
 				}
 
 				for (int f=0; f<UIInputsOnChilderens.Length; f++){
-					OnConvertUIInput (UIInputsOnChilderens[f].gameObject, true);
+					OnConvertUIInput (UIInputsOnChilderens[f].gameObject, canvasRoot, true);
 				}
 				for (int g=0; g<UIScrollBarsOnChilderens.Length; g++){
-					OnConvertUIScrollBar (UIScrollBarsOnChilderens[g].gameObject, true);
+					OnConvertUIScrollBar (UIScrollBarsOnChilderens[g].gameObject, canvasRoot, true);
 				}
 				for (int h=0; h<UISlidersOnChilderens.Length; h++){
-					OnConvertUISlider (UISlidersOnChilderens[h].gameObject, true);
+					OnConvertUISlider (UISlidersOnChilderens[h].gameObject, canvasRoot, true);
 				}
 #if PopupLists
 				for (int i=0; i<UIPopuplistsOnChilderens.Length; i++){
-					OnConvertUIPopuplist (UIPopuplistsOnChilderens[i].gameObject, true);
+					OnConvertUIPopuplist (UIPopuplistsOnChilderens[i].gameObject, canvasRoot, true);
 				}
 #endif
 				OnAdjustSliders(inProgressObject);
-				OnCleanConvertedItem(GameObject.FindObjectOfType<Canvas>().gameObject);
+				OnCleanConvertedItem(inProgressObject);
 			}
-		}else{
+			canvasRoot.transform.parent = null;
+			canvasRoot.worldCamera = null;
+			canvasRoot.renderMode = RenderMode.ScreenSpaceOverlay;
+			Debug.Log("转换完成");
+		}
+		else{
 			Debug.LogError ("<Color=red>NO NGUI-Wedgits SELECTED</Color>, <Color=yellow>Please select at least one wedgit to convert</Color>");
 		}
 	}
+		
 	#endregion
 
 	#region UIWidgets Converter
-	static void OnConvertUIWidget(GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
-
-		tempObject = selectedObject;
-
-		tempObject.layer = LayerMask.NameToLayer ("UI");
+	static void OnConvertUIWidget(GameObject selectedObject, Canvas canvas, bool isSubConvert){
+		selectedObject.layer = LayerMask.NameToLayer ("UI");
 		if (!isSubConvert){
-			if (GameObject.FindObjectOfType<Canvas>()){
-				tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
-			}else{
+			if (canvas)
+			{
+				selectedObject.transform.SetParent(canvas.transform);
+			}
+			else
+			{
 				Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyImmediate (tempObject.gameObject);
+				DestroyNGUI (selectedObject.gameObject);
 				return;
 			}
 		}
 
-		tempObject.name = selectedObject.name;
-		tempObject.transform.position = selectedObject.transform.position;
+		selectedObject.name = selectedObject.name;
+		selectedObject.transform.position = selectedObject.transform.position;
 
-		RectTransform addedRectT;
-
-		addedRectT = tempObject.AddComponent<RectTransform>();
-
-		tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UIWidget>().pivotOffset;
-		tempObject.GetComponent<RectTransform>().sizeDelta = tempObject.GetComponent<UIWidget>().localSize;
-		tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		RectTransform addedRectT = selectedObject.AddComponent<RectTransform>();
+		addedRectT.pivot = selectedObject.GetComponent<UIWidget>().pivotOffset;
+		addedRectT.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+		addedRectT.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 	}
 	#endregion
 
 	#region UISprites Converter
-	static void OnConvertUISprite(GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
+	static void OnConvertUISprite(GameObject selectedObject, Canvas canvas, bool isSubConvert){
 		UISprite sprite = selectedObject.GetComponent<UISprite>();
 		if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+ sprite.atlas.texture.name+".png")){
 			Debug.Log ("The Atlas <color=yellow>" + sprite.atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
@@ -288,34 +330,31 @@ public class ConverterMenu : MonoBehaviour {
 			ConvertAtlas(sprite);
 		}
 
-		tempObject = selectedObject;
-		tempObject.layer = LayerMask.NameToLayer ("UI");
+		selectedObject.layer = LayerMask.NameToLayer ("UI");
 		if (!isSubConvert){
-			if (GameObject.FindObjectOfType<Canvas>()){
-				tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+			if (canvas){
+				selectedObject.transform.SetParent(canvas.transform);
 			}else{
 				Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyImmediate (tempObject.gameObject);
+				DestroyNGUI(selectedObject.gameObject);
 				return;
 			}
 		}
-		tempObject.name = selectedObject.name;
-		tempObject.transform.position = selectedObject.transform.position;
 		
 		//to easliy control the old and the new sprites and buttons
 		Image addedImage;
 		//define the objects of the previous variables
-		if (tempObject.GetComponent<Image>()){
-			addedImage = tempObject.GetComponent<Image>();
+		if (selectedObject.GetComponent<Image>()){
+			addedImage = selectedObject.GetComponent<Image>();
 		}else{
-			addedImage = tempObject.AddComponent<Image>();
+			addedImage = selectedObject.AddComponent<Image>();
 		}
 		UISprite originalSprite = selectedObject.GetComponent<UISprite>();
 
 		//adjust the rect transform to fit the original one's size
-		tempObject.GetComponent<RectTransform>().pivot = originalSprite.pivotOffset;
-		tempObject.GetComponent<RectTransform>().sizeDelta = originalSprite.localSize;
-		tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		selectedObject.GetComponent<RectTransform>().pivot = originalSprite.pivotOffset;
+		selectedObject.GetComponent<RectTransform>().sizeDelta = originalSprite.localSize;
+		selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 		
 		Sprite[] sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalSprite.atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 		for (int c=0; c<sprites.Length; c++){
@@ -355,36 +394,30 @@ public class ConverterMenu : MonoBehaviour {
 	#endregion
 
 	#region UILabels Converter
-	static void OnConvertUILabel(GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
-		Text tempText;
-
-		tempObject = selectedObject;
-		tempObject.layer = LayerMask.NameToLayer ("UI");
+	static void OnConvertUILabel(GameObject selectedObject, Canvas canvas, bool isSubConvert){
+		selectedObject.layer = LayerMask.NameToLayer ("UI");
 		if (!isSubConvert){
-			if (GameObject.FindObjectOfType<Canvas>()){
-				tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+			if (canvas){
+				selectedObject.transform.SetParent(canvas.transform);
 			}else{
 				Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyImmediate (tempObject.gameObject);
+				DestroyNGUI (selectedObject.gameObject);
 				return;
 			}
 		}
-		tempText = tempObject.AddComponent<Text>();
-		tempObject.name = selectedObject.name;
 		//to adjust the text issue
-		if (tempObject.GetComponent <UILabel>().overflowMethod == UILabel.Overflow.ResizeHeight){
-			tempObject.GetComponent<RectTransform>().pivot = new Vector2(tempObject.GetComponent<RectTransform>().pivot.x, 1.0f);
+		if (selectedObject.GetComponent <UILabel>().overflowMethod == UILabel.Overflow.ResizeHeight){
+			selectedObject.GetComponent<RectTransform>().pivot = new Vector2(selectedObject.GetComponent<RectTransform>().pivot.x, 1.0f);
 		}
-		//tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UILabel>().pivotOffset;
-		tempObject.transform.position = selectedObject.transform.position;
-		tempObject.GetComponent<RectTransform>().sizeDelta = tempObject.GetComponent<UILabel>().localSize;
-		tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		selectedObject.GetComponent<RectTransform>().pivot = selectedObject.GetComponent<UILabel>().pivotOffset; // TODO
+		selectedObject.transform.position = selectedObject.transform.position;
+		selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UILabel>().localSize;
+		selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
 
-		UILabel originalText = tempObject.GetComponent <UILabel>();
+		Text tempText = selectedObject.AddComponent<Text>();
+		UILabel originalText = selectedObject.GetComponent <UILabel>();
 		if (tempText != null){
-			//tempText = originalText.gameObject.AddComponent<Text>();
 			tempText.text = originalText.text;
 			tempText.color = originalText.color;
 			tempText.gameObject.GetComponent<RectTransform>().sizeDelta = originalText.localSize;
@@ -416,21 +449,33 @@ public class ConverterMenu : MonoBehaviour {
 
 
 		}
-
+		// ????
 		if (originalText.gameObject.GetComponent<TypewriterEffect>()){
-			uUITypewriterEffect tempWriterEffect = 
 			originalText.gameObject.AddComponent<uUITypewriterEffect>();
-			DestroyImmediate(originalText.gameObject.GetComponent<TypewriterEffect>());
+			DestroyNGUI(originalText.gameObject.GetComponent<TypewriterEffect>());
 		}
+
+		#region 根据分辨率 转化坐标
+		Vector3 targetPos = canvas.worldCamera.WorldToScreenPoint(selectedObject.transform.position);
+		RectTransform canvasRt = canvas.GetComponent<RectTransform>();
+		float resolutionRatioWidth = canvasRt.sizeDelta.x;
+		float resolutionRatioHeight = canvasRt.sizeDelta.y;
+		float widthRatio = resolutionRatioWidth / Screen.width;
+		float heightRatio = resolutionRatioHeight / Screen.height;
+		//先分别乘以宽高比值
+		targetPos.x *= widthRatio;
+		targetPos.y *= heightRatio;
+		//计算在中心点的屏幕坐标
+		targetPos.x -= resolutionRatioWidth * 0.5f;
+		targetPos.y -= resolutionRatioHeight * 0.5f;
+		selectedObject.GetComponent<RectTransform>().anchoredPosition3D = new Vector3(targetPos.x, targetPos.y, 0);
+		#endregion
 
 	}
 	#endregion
 
 	#region UIButtons Converter
-	static void OnConvertUIButton(GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
-		tempObject = selectedObject;
-
+	static void OnConvertUIButton(GameObject selectedObject,Canvas canvas, bool isSubConvert){
 		/*
 		UIAtlas tempNguiAtlas;
 		tempNguiAtlas = selectedObject.GetComponent<UISprite>().atlas;
@@ -440,51 +485,50 @@ public class ConverterMenu : MonoBehaviour {
 			ConvertAtlas(tempNguiAtlas);
 		}
 		*/
-		if (tempObject.GetComponent<Scrollbar>() || tempObject.GetComponent<Slider>()){
+		if (selectedObject.GetComponent<Scrollbar>() || selectedObject.GetComponent<Slider>()){
 
 		}else{
-			tempObject.layer = LayerMask.NameToLayer ("UI");
+			selectedObject.layer = LayerMask.NameToLayer ("UI");
 			if (!isSubConvert){
 				if (GameObject.FindObjectOfType<Canvas>()){
-					tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+					selectedObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyImmediate (tempObject.gameObject);
+					DestroyNGUI (selectedObject.gameObject);
 					return;
 				}
 			}
-			tempObject.transform.position = selectedObject.transform.position;
 			
 			//to easliy control the old and the new sprites and buttons
 			Button addedButton;
 			UIButton originalButton;
 			
 			//define the objects of the previous variables
-			if (tempObject.GetComponent<Button>()){
-				addedButton = tempObject.GetComponent<Button>();
+			if (selectedObject.GetComponent<Button>()){
+				addedButton = selectedObject.GetComponent<Button>();
 			}else{
-				addedButton = tempObject.AddComponent<Button>();
+				addedButton = selectedObject.AddComponent<Button>();
 			}
 			originalButton = selectedObject.GetComponent<UIButton>();
 			
 			//adjust the rect transform to fit the original one's size..If it have no sprite, then it must had a widget
-			if (tempObject.GetComponent<RectTransform>()){
+			if (selectedObject.GetComponent<RectTransform>()){
 
 			}else{
-				tempObject.AddComponent<RectTransform>();
+				selectedObject.AddComponent<RectTransform>();
 			}
 
 			if (originalButton.GetComponent<UISprite>()){
-				tempObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UISprite>().localSize;
-				tempObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UISprite>().pivotOffset;
+				selectedObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UISprite>().localSize;
+				selectedObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UISprite>().pivotOffset;
 			}else if (originalButton.GetComponent<UIWidget>()){
-				tempObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UIWidget>().localSize;
-				tempObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UIWidget>().pivotOffset;
+				selectedObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UIWidget>().localSize;
+				selectedObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UIWidget>().pivotOffset;
 			}else{
-				tempObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().localSize;
-				tempObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().pivotOffset;
+				selectedObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().localSize;
+				selectedObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().pivotOffset;
 			}
-			tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
 			//if the object ahve no UISprites, then a sub object must have!
 			Sprite[] sprites;
@@ -494,7 +538,7 @@ public class ConverterMenu : MonoBehaviour {
 				sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalButton.gameObject.GetComponentInChildren<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 			}
 
-			if (tempObject.gameObject.GetComponent<UIToggle>()){
+			if (selectedObject.gameObject.GetComponent<UIToggle>()){
 
 			}else{
 				SpriteState tempState = addedButton.spriteState;
@@ -524,7 +568,7 @@ public class ConverterMenu : MonoBehaviour {
 				addedButton.colors = tempColor;
 			}
 
-			if (tempObject.gameObject.GetComponent<UIToggle>()){
+			if (selectedObject.gameObject.GetComponent<UIToggle>()){
 
 			}else{
 				//if the button is using some sprites, then switch the transitons into the swap type. otherwise, keep it with the color tint!
@@ -539,21 +583,21 @@ public class ConverterMenu : MonoBehaviour {
 			}
 
 			//check if the parent was converted into a scrollbar
-			if (tempObject.transform.GetComponentInParent<Scrollbar>()){
-				tempObject.transform.GetComponentInParent<Scrollbar>().handleRect = tempObject.GetComponent<RectTransform>();
-				tempObject.GetComponent<RectTransform>().sizeDelta = new Vector2(tempObject.GetComponent<UISprite>().rightAnchor.absolute*2
-				                                                                 ,tempObject.GetComponent<UISprite>().topAnchor.absolute*2);
+			if (selectedObject.transform.GetComponentInParent<Scrollbar>()){
+				selectedObject.transform.GetComponentInParent<Scrollbar>().handleRect = selectedObject.GetComponent<RectTransform>();
+				selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(selectedObject.GetComponent<UISprite>().rightAnchor.absolute*2
+				                                                                 , selectedObject.GetComponent<UISprite>().topAnchor.absolute*2);
 			}
 
 			//check if the parent was converted into a slider
-			if (tempObject.transform.GetComponentInParent<Slider>()){
-				tempObject.transform.GetComponentInParent<Slider>().handleRect = tempObject.GetComponent<RectTransform>();
-				if (tempObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.LeftToRight ||  tempObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.RightToLeft){
-					tempObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(tempObject.GetComponent<UISprite>().localSize.x)
-					                                                                 ,Mathf.Abs(tempObject.GetComponent<UISprite>().topAnchor.absolute*2));
+			if (selectedObject.transform.GetComponentInParent<Slider>()){
+				selectedObject.transform.GetComponentInParent<Slider>().handleRect = selectedObject.GetComponent<RectTransform>();
+				if (selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.LeftToRight || selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.RightToLeft){
+					selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.x)
+					                                                                 ,Mathf.Abs(selectedObject.GetComponent<UISprite>().topAnchor.absolute*2));
 				}else{
-					tempObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(tempObject.GetComponent<UISprite>().leftAnchor.absolute*2),
-					                                                                 Mathf.Abs(tempObject.GetComponent<UISprite>().localSize.y));
+					selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().leftAnchor.absolute*2),
+					                                                                 Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.y));
 				}
 			}
 
@@ -562,49 +606,37 @@ public class ConverterMenu : MonoBehaviour {
 	#endregion
 
 	#region UIToggles Converter
-	static void OnConvertUIToggle (GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
-
-		tempObject = selectedObject;
-
-		if (tempObject.GetComponent<uUIToggle>()){
+	static void OnConvertUIToggle (GameObject selectedObject, Canvas canvas, bool isSubConvert){
+		if (selectedObject.GetComponent<uUIToggle>()){
 			return;
 		}else{
-			tempObject.layer = LayerMask.NameToLayer ("UI");
+			selectedObject.layer = LayerMask.NameToLayer ("UI");
 			if (!isSubConvert){
-				if (GameObject.FindObjectOfType<Canvas>()){
-					tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+				if (canvas){
+					selectedObject.transform.SetParent(canvas.transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyImmediate (tempObject.gameObject);
+					DestroyNGUI (selectedObject.gameObject);
 					return;
 				}
 			}
-			
-			tempObject.name = selectedObject.name;
-			tempObject.transform.position = selectedObject.transform.position;
-			
-			Toggle addedToggle;
-			uUIToggle addedToggleController;
-			
-			addedToggle = tempObject.AddComponent<Toggle>();
-			addedToggleController = tempObject.AddComponent<uUIToggle>();
+						
+			Toggle addedToggle = selectedObject.AddComponent<Toggle>();
+			uUIToggle addedToggleController = selectedObject.AddComponent<uUIToggle>();
 
-			tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UIWidget>().pivotOffset;
-			tempObject.GetComponent<RectTransform>().sizeDelta = tempObject.GetComponent<UIWidget>().localSize;
-			tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			selectedObject.GetComponent<RectTransform>().pivot = selectedObject.GetComponent<UIWidget>().pivotOffset;
+			selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
 
 			//addedToggle
+			addedToggleController.Group = selectedObject.GetComponent<UIToggle>().group;
+			addedToggleController.StateOfNone = selectedObject.GetComponent<UIToggle>().optionCanBeNone;
+			addedToggleController.startingState = selectedObject.GetComponent<UIToggle>().startsActive;
 
-			addedToggleController.Group = tempObject.GetComponent<UIToggle>().group;
-			addedToggleController.StateOfNone = tempObject.GetComponent<UIToggle>().optionCanBeNone;
-			addedToggleController.startingState = tempObject.GetComponent<UIToggle>().startsActive;
-
-			UISprite[] childImages;
-			childImages = tempObject.GetComponentsInChildren<UISprite>(); //not using <Image>() because the child have not been converted yet
+			UISprite[] childImages = selectedObject.GetComponentsInChildren<UISprite>(); //not using <Image>() because the child have not been converted yet
 			for (int x=0; x< childImages.Length; x++){
-				if (childImages[x].spriteName == tempObject.GetComponent<UIToggle>().activeSprite.gameObject.GetComponent<UISprite>().spriteName){
+				if (childImages[x].spriteName == selectedObject.GetComponent<UIToggle>().activeSprite.gameObject.GetComponent<UISprite>().spriteName){
 					Sprite[] sprites;
 					sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + childImages[x].atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 					for (int c=0; c<sprites.Length; c++){
@@ -614,68 +646,59 @@ public class ConverterMenu : MonoBehaviour {
 					}
 				}
 			}
-			addedToggleController.m_Animation = tempObject.GetComponent<UIToggle>().activeAnimation;
+			addedToggleController.m_Animation = selectedObject.GetComponent<UIToggle>().activeAnimation;
 		}
 	}
 	#endregion
 
 	#region UIInput Converter
-	static void OnConvertUIInput (GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
-		InputField newInputField;
-		tempObject = selectedObject;
-
-		if (tempObject.GetComponent<InputField>()){
-
-		}else{
-			tempObject.layer = LayerMask.NameToLayer ("UI");
-			
+	static void OnConvertUIInput (GameObject selectedObject, Canvas canvas, bool isSubConvert){
+		selectedObject.layer = LayerMask.NameToLayer("UI");
+		if (!selectedObject.GetComponent<InputField>()){
 			if (!isSubConvert){
-				if (GameObject.FindObjectOfType<Canvas>()){
-					tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+				if (canvas){
+					selectedObject.transform.SetParent(canvas.transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyImmediate (tempObject.gameObject);
+					DestroyNGUI (selectedObject.gameObject);
 					return;
 				}
 			}
-			
-			newInputField = tempObject.AddComponent<InputField>();
-			//tempObject.name = selectedObject.name;
-			
+
+			InputField newInputField = selectedObject.AddComponent<InputField>();
 			//tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UILabel>().pivotOffset;
-			tempObject.transform.position = selectedObject.transform.position;
-			tempObject.GetComponent<RectTransform>().sizeDelta = tempObject.GetComponent<UIWidget>().localSize;
-			tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			selectedObject.transform.position = selectedObject.transform.position;
+			selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 			
 			ColorBlock tempColor = newInputField.colors;
-			tempColor.normalColor = tempObject.GetComponent<UIInput>().activeTextColor;
-			tempColor.pressedColor = tempObject.GetComponent<UIInput>().caretColor;
-			tempColor.highlightedColor = tempObject.GetComponent<UIInput>().selectionColor;
+			tempColor.normalColor = selectedObject.GetComponent<UIInput>().activeTextColor;
+			tempColor.pressedColor = selectedObject.GetComponent<UIInput>().caretColor;
+			tempColor.highlightedColor = selectedObject.GetComponent<UIInput>().selectionColor;
 			//mising the disabled/inactive
 			newInputField.colors = tempColor;
 			
-			newInputField.text = tempObject.GetComponent<UIInput>().value;
-			newInputField.characterLimit = tempObject.GetComponent<UIInput>().characterLimit;
+			newInputField.text = selectedObject.GetComponent<UIInput>().value;
+			newInputField.characterLimit = selectedObject.GetComponent<UIInput>().characterLimit;
 			newInputField.textComponent = newInputField.gameObject.GetComponentInChildren<Text>();
 			
-			if (tempObject.GetComponent<UIInput>().inputType == UIInput.InputType.Standard){
+			if (selectedObject.GetComponent<UIInput>().inputType == UIInput.InputType.Standard){
 				newInputField.contentType = InputField.ContentType.Standard;
-			}else if (tempObject.GetComponent<UIInput>().inputType == UIInput.InputType.AutoCorrect){
+			}else if (selectedObject.GetComponent<UIInput>().inputType == UIInput.InputType.AutoCorrect){
 				newInputField.contentType = InputField.ContentType.Autocorrected;
-			}else if (tempObject.GetComponent<UIInput>().inputType == UIInput.InputType.Password){
+			}else if (selectedObject.GetComponent<UIInput>().inputType == UIInput.InputType.Password){
 				newInputField.contentType = InputField.ContentType.Password;
-			}else if (tempObject.GetComponent<UIInput>().validation == UIInput.Validation.Integer){
+			}else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Integer){
 				newInputField.contentType = InputField.ContentType.IntegerNumber;
-			}else if (tempObject.GetComponent<UIInput>().validation == UIInput.Validation.Float){
+			}else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Float){
 				newInputField.contentType = InputField.ContentType.DecimalNumber;
-			}else if (tempObject.GetComponent<UIInput>().validation == UIInput.Validation.Alphanumeric){
+			}else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Alphanumeric){
 				newInputField.contentType = InputField.ContentType.Alphanumeric;
-			}else if (tempObject.GetComponent<UIInput>().validation == UIInput.Validation.Username){
+			}else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Username){
 				newInputField.contentType = InputField.ContentType.EmailAddress;
-			}else if (tempObject.GetComponent<UIInput>().validation == UIInput.Validation.Name){
+			}else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Name){
 				newInputField.contentType = InputField.ContentType.Name;	
-			}else if (tempObject.GetComponent<UIInput>().validation == UIInput.Validation.None){
+			}else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.None){
 				newInputField.contentType = InputField.ContentType.Custom;
 			}
 			
@@ -686,36 +709,34 @@ public class ConverterMenu : MonoBehaviour {
 	#endregion
 
 	#region UIScrollBar Converter
-	static void OnConvertUIScrollBar(GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
-		Scrollbar newScrollbar;
-		tempObject = selectedObject;
-		
-		if (tempObject.GetComponent<Scrollbar>()){
-			
-		}else{
-			tempObject.layer = LayerMask.NameToLayer ("UI");
+	static void OnConvertUIScrollBar(GameObject selectedObject, Canvas canvas, bool isSubConvert){
+		if (selectedObject.GetComponent<Scrollbar>() == null){
+			selectedObject.layer = LayerMask.NameToLayer ("UI");
 			
 			if (!isSubConvert){
-				if (GameObject.FindObjectOfType<Canvas>()){
-					tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+				if (canvas){
+					selectedObject.transform.SetParent(canvas.transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyImmediate (tempObject.gameObject);
+					DestroyNGUI (selectedObject.gameObject);
 					return;
 				}
 			}
-			
-			newScrollbar = tempObject.AddComponent<Scrollbar>();
-			//tempObject.name = selectedObject.name;
 
-			if (tempObject.GetComponent<UIButton>()){
-				DestroyImmediate (tempObject.GetComponent<UIButton>());
+            if (selectedObject.GetComponent<Button>())
+            {
+				DestroyNGUI(selectedObject.GetComponent<Button>());
 			}
-			//tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UILabel>().pivotOffset;
-			tempObject.transform.position = selectedObject.transform.position;
-			tempObject.GetComponent<RectTransform>().sizeDelta = tempObject.GetComponent<UIWidget>().localSize;
-			tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			Scrollbar newScrollbar = selectedObject.AddComponent<Scrollbar>();
+			if (selectedObject.GetComponent<UIButton>()){
+				DestroyNGUI (selectedObject.GetComponent<UIButton>());
+			}
+			//selectedObject.GetComponent<RectTransform>().pivot = selectedObject.GetComponent<UILabel>().pivotOffset;
+			if (selectedObject.GetComponent<UIWidget>() != null)
+            {
+				selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			}
+			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
 			UIScrollBar oldScrollbar = selectedObject.GetComponent<UIScrollBar>();
 
@@ -749,36 +770,31 @@ public class ConverterMenu : MonoBehaviour {
 	#endregion
 
 	#region UISlider Converter
-	static void OnConvertUISlider (GameObject selectedObject, bool isSubConvert){
-		GameObject tempObject;
-		Slider newSlider;
-		tempObject = selectedObject;
-		
-		if (tempObject.GetComponent<Slider>()){
-			
-		}else{
-			tempObject.layer = LayerMask.NameToLayer ("UI");
-			
+	static void OnConvertUISlider (GameObject selectedObject, Canvas canvas, bool isSubConvert){
+		if (selectedObject.GetComponent<Slider>() != null){
+			selectedObject.layer = LayerMask.NameToLayer ("UI");
 			if (!isSubConvert){
 				if (GameObject.FindObjectOfType<Canvas>()){
-					tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+					selectedObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyImmediate (tempObject.gameObject);
+					DestroyNGUI (selectedObject.gameObject);
 					return;
 				}
 			}
+
+			Slider newSlider = selectedObject.AddComponent<Slider>();
 			
-			newSlider = tempObject.AddComponent<Slider>();
-			//tempObject.name = selectedObject.name;
-			
-			if (tempObject.GetComponent<UIButton>()){
-				DestroyImmediate (tempObject.GetComponent<UIButton>());
+			if (selectedObject.GetComponent<UIButton>()){
+				DestroyNGUI (selectedObject.GetComponent<UIButton>());
 			}
 			//tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UILabel>().pivotOffset;
-			tempObject.transform.position = selectedObject.transform.position;
-			tempObject.GetComponent<RectTransform>().sizeDelta = tempObject.GetComponent<UIWidget>().localSize;
-			tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			selectedObject.transform.position = selectedObject.transform.position;
+            if (selectedObject.GetComponent<UIWidget>() != null)
+            {
+				selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			}
+			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 			
 			UISlider oldSlider = selectedObject.GetComponent<UISlider>();
 
@@ -798,11 +814,11 @@ public class ConverterMenu : MonoBehaviour {
 					newSlider.direction = Slider.Direction.TopToBottom;
 				}
 
-				for (int x=0; x<tempObject.GetComponent<UISlider>().onChange.Capacity; x++){
-					if (tempObject.GetComponent<UISlider>().onChange[x].methodName == "SetCurrentPercent"){
+				for (int x=0; x< selectedObject.GetComponent<UISlider>().onChange.Capacity; x++){
+					if (selectedObject.GetComponent<UISlider>().onChange[x].methodName == "SetCurrentPercent"){
 						//Debug.Log ("<Color=blue> HERE </Color>");
-						tempObject.GetComponentInChildren<UILabel>().gameObject.AddComponent<uUIGetSliderPercentageValue>();
-						tempObject.GetComponentInChildren<uUIGetSliderPercentageValue>().sliderObject = tempObject.GetComponent<Slider>();
+						selectedObject.GetComponentInChildren<UILabel>().gameObject.AddComponent<uUIGetSliderPercentageValue>();
+						selectedObject.GetComponentInChildren<uUIGetSliderPercentageValue>().sliderObject = selectedObject.GetComponent<Slider>();
 					}
 				}
 				
@@ -849,7 +865,7 @@ public class ConverterMenu : MonoBehaviour {
 					tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyImmediate (tempObject.gameObject);
+					DestroyNGUI (tempObject.gameObject);
 					return;
 				}
 			}
@@ -923,80 +939,94 @@ public class ConverterMenu : MonoBehaviour {
 
 		for (int a=0; a<UIWidgetsOnChilderens.Length; a++){
 			if (UIWidgetsOnChilderens[a]){
-				DestroyImmediate (UIWidgetsOnChilderens[a]);
+				DestroyNGUI (UIWidgetsOnChilderens[a]);
 			}
 		}
 		
 		for (int b=0; b<UISpritesOnChilderens.Length; b++){
 			if (UISpritesOnChilderens[b]){
-				DestroyImmediate (UISpritesOnChilderens[b]);
+				DestroyNGUI (UISpritesOnChilderens[b]);
 			}
 		}
 		
 		for (int c=0; c<UILablesOnChilderens.Length; c++){
 			if (UILablesOnChilderens[c]){
-				DestroyImmediate (UILablesOnChilderens[c]);
+				DestroyNGUI (UILablesOnChilderens[c]);
 			}
 		}
 		
 		for (int d=0; d<UIButtonsOnChilderens.Length; d++){
 			if (UIButtonsOnChilderens[d]){
-				DestroyImmediate (UIButtonsOnChilderens[d]);
+				DestroyNGUI (UIButtonsOnChilderens[d]);
 			}
 		}
 		
 		for (int e=0; e<UITogglesOnChilderens.Length; e++){
 			if(UITogglesOnChilderens[e]){
-				DestroyImmediate (UITogglesOnChilderens[e]);
+				DestroyNGUI (UITogglesOnChilderens[e]);
 			}
 		}
 
 		for (int f=0; f<UIInputsOnChilderens.Length; f++){
 			if (UIInputsOnChilderens[f]){
-				DestroyImmediate (UIInputsOnChilderens[f]);
+				DestroyNGUI (UIInputsOnChilderens[f]);
 			}
 		}
 
 		for (int g=0; g<UIScrollBarsOnChilderens.Length; g++){
 			if (UIScrollBarsOnChilderens[g]){
-				DestroyImmediate (UIScrollBarsOnChilderens[g]);
+				DestroyNGUI(UIScrollBarsOnChilderens[g]);
 			}
 		}
 
 		for (int h=0; h<UISlidersOnChilderens.Length; h++){
 			if (UISlidersOnChilderens[h]){
 				if (UISlidersOnChilderens[h].GetComponent<UISliderColors>()){
-					DestroyImmediate (UISlidersOnChilderens[h].gameObject.GetComponent<UISliderColors>());
+					DestroyNGUI(UISlidersOnChilderens[h].gameObject.GetComponent<UISliderColors>());
 				}
-				DestroyImmediate (UISlidersOnChilderens[h]);
+				DestroyNGUI(UISlidersOnChilderens[h]);
 			}
 		}
 #if PopupLists
 		for (int h=0; h<UIPopuplistsOnChilderens.Length; h++){
 			if (UIPopuplistsOnChilderens[h]){
-				DestroyImmediate (UIPopuplistsOnChilderens[h]);
+				DestroyNGUI (UIPopuplistsOnChilderens[h]);
 			}
 		}
 #endif
 		for (int z=0; z<CollidersOnChilderens.Length; z++){
 			if (CollidersOnChilderens[z]){
-				DestroyImmediate (CollidersOnChilderens[z]);
+				DestroyNGUI(CollidersOnChilderens[z]);
 			}
 		}
 
 
-		GameObject[] allTrash;
-		allTrash = GameObject.FindObjectsOfType<GameObject>();
-		for (int Z=0; Z<allTrash.Length; Z++){
-			if (allTrash[Z].gameObject.name.Contains("NGUI Snapshot") && allTrash[Z].gameObject.transform.GetComponentInParent<RectTransform>()){
-				DestroyImmediate (allTrash[Z].gameObject);
-			}
-		}
+		//GameObject[] allTrash;
+		//allTrash = GameObject.FindObjectsOfType<GameObject>();
+		//for (int Z=0; Z<allTrash.Length; Z++){
+		//	if (allTrash[Z].gameObject.name.Contains("NGUI Snapshot") && allTrash[Z].gameObject.transform.GetComponentInParent<RectTransform>()){
+		//		Debug.LogError("allTrash[Z].gameObject " + allTrash[Z].gameObject.name);
+		//		DestroyNGUI (allTrash[Z].gameObject);
+		//	}
+		//}
 		Debug.Log ("<Color=blue> Cleaned all the <Color=Red>NGUISnapshot</Color> Objects in the scene Hierarchy</Color>");
 
 
 	}
 	#endregion
+
+	static void DestroyNGUI(Object cmp)
+    {
+		try
+		{
+			DestroyImmediate(cmp);
+		}
+		catch (System.Exception e)
+		{
+			Debug.LogWarning(cmp.name + ": " + cmp.GetType().ToString() + " : " + e.Message);
+			throw;
+		}
+	}
 
 }
 
