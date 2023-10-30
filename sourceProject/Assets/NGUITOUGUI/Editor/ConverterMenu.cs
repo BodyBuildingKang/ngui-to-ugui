@@ -1,27 +1,24 @@
-﻿// All Rights Reserved, Muhammad A.Moniem (mamoniem) 2015  http://www.mamoniem.com 
-// v1.0
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System.IO;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
 
 public class ConverterMenu : MonoBehaviour {
 
+	public const string AtlasConvertPath = "Assets/NGUITOUGUI/AtlasConvert/";
+
+
 	#region Convert Atlas Selected
-	[MenuItem ("nGUI TO uGUI/Atlas Convert/Selected")]
+	[MenuItem ("NGUI->UGUI/AtlasConvert/SelectedUIAtlas")]
 	static void OnConvertAtlasSelected () {	
 		if (Selection.activeGameObject != null){
 			foreach(GameObject selectedObject in Selection.gameObjects){
 				if (selectedObject.GetComponent<UIAtlas>()){
-					UIAtlas tempNguiAtlas;
-					tempNguiAtlas = selectedObject.GetComponent<UIAtlas>();
-					if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+tempNguiAtlas.name+".png")){
-						Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
+					UIAtlas tempNguiAtlas = selectedObject.GetComponent<UIAtlas>();
+					if (File.Exists(AtlasConvertPath + tempNguiAtlas.name+".png")){
+						Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"NGUITOUGUI/AtlasConvert\" </color>Directory");
 					}else{
 						ConvertAtlas(tempNguiAtlas);
 					}
@@ -33,29 +30,15 @@ public class ConverterMenu : MonoBehaviour {
 	}
 	#endregion
 
-	#region Convert Atlases In Scene
-	[MenuItem ("nGUI TO uGUI/Atlas Convert/Current Scene")]
-	static void OnConvertAtlasesInScene () {
-		UISprite[] FoundAtlasesList = GameObject.FindObjectsOfType<UISprite>();
-		for (int c=0; c<FoundAtlasesList.Length; c++){
-			if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+ FoundAtlasesList[c].atlas.texture.name+".png")){
-				Debug.Log ("The Atlas <color=yellow>" + FoundAtlasesList[c].atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
-			}else{
-				ConvertAtlas(FoundAtlasesList[c]);
-			}
-		}
-	}
-	#endregion
-
 	#region Convert Atlas From Selected
-	[MenuItem ("nGUI TO uGUI/Atlas Convert/Related To Selected")]
+	[MenuItem ("NGUI->UGUI/AtlasConvert/SelectedUISprite")]
 	static void OnConvertAtlasesFromSelected () {
 		if (Selection.activeGameObject != null){
 			foreach(GameObject selectedObject in Selection.gameObjects){
 				if (selectedObject.GetComponent<UISprite>()){
 					UISprite tempNguiAtlas = selectedObject.GetComponent<UISprite>();
-					if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+tempNguiAtlas.name+".png")){
-						Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
+					if (File.Exists(AtlasConvertPath + tempNguiAtlas.name+".png")){
+						Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"NGUITOUGUI/AtlasConvert\" </color>Directory");
 					}else{
 						ConvertAtlas(tempNguiAtlas);
 					}
@@ -65,19 +48,38 @@ public class ConverterMenu : MonoBehaviour {
 	}
 	#endregion
 
+	#region Convert Atlases In Scene
+	[MenuItem("NGUI->UGUI/AtlasConvert/CurrentScene")]
+	static void OnConvertAtlasesInScene()
+	{
+		UISprite[] FoundAtlasesList = GameObject.FindObjectsOfType<UISprite>();
+		for (int c = 0; c < FoundAtlasesList.Length; c++)
+		{
+			if (File.Exists(AtlasConvertPath + FoundAtlasesList[c].atlas.texture.name + ".png"))
+			{
+				Debug.Log("The Atlas <color=yellow>" + FoundAtlasesList[c].atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"NGUITOUGUI/AtlasConvert\" </color>Directory");
+			}
+			else
+			{
+				ConvertAtlas(FoundAtlasesList[c]);
+			}
+		}
+	}
+	#endregion
+
 	#region PROCEDURALS Convert Atlas
 	static void ConvertAtlas(UIAtlas atlas)
 	{
-		if (!Directory.Exists("Assets/nGUI TO uUI/CONVERSION_DATA"))
+		if (!Directory.Exists(AtlasConvertPath))
 		{
-			AssetDatabase.CreateFolder("Assets", "nGUI TO uUI/CONVERSION_DATA");
+			AssetDatabase.CreateFolder("Assets", "Assets/NGUITOUGUI/AtlasConvert");
 		}
 
-		AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(atlas.name)[0]), "Assets/nGUI TO uUI/CONVERSION_DATA/" + atlas.name + ".png");
+		AssetDatabase.CopyAsset(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(atlas.name)[0]), AtlasConvertPath + atlas.name + ".png");
 		AssetDatabase.Refresh();
-		//Debug.Log(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(theAtlas.name)[0]) + "\n" + "Assets/nGUI TO uUI/CONVERSION_DATA/"+theAtlas.name+".png");
+		//Debug.Log(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets(theAtlas.name)[0]) + "\n" + AtlasConvertPath+theAtlas.name+".png");
 
-		string conversionPath = "Assets/nGUI TO uUI/CONVERSION_DATA/" + atlas.name + ".png";
+		string conversionPath = AtlasConvertPath + atlas.name + ".png";
 		TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(conversionPath);
 		importer.textureType = TextureImporterType.Sprite;
 		importer.mipmapEnabled = false;
@@ -102,13 +104,13 @@ public class ConverterMenu : MonoBehaviour {
 
 
 	static void ConvertAtlas(UISprite uISprite){
-		if(!Directory.Exists("Assets/nGUI TO uUI/CONVERSION_DATA")){
-			AssetDatabase.CreateFolder ("Assets/nGUI TO uUI", "CONVERSION_DATA");
+		if(!Directory.Exists("Assets/NGUITOUGUI/AtlasConvert")){
+			AssetDatabase.CreateFolder ("Assets/NGUITOUGUI", "AtlasConvert");
 		}
 		string originPath = AssetDatabase.GetAssetPath(uISprite.atlas.texture as Object);
-		AssetDatabase.CopyAsset(originPath, "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png");
+		AssetDatabase.CopyAsset(originPath, AtlasConvertPath+ uISprite.atlas.texture.name+".png");
 		AssetDatabase.Refresh();
-        string conversionPath = "Assets/nGUI TO uUI/CONVERSION_DATA/"+ uISprite.atlas.texture.name+".png";
+        string conversionPath = AtlasConvertPath+ uISprite.atlas.texture.name+".png";
 		TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(conversionPath);
 		importer.textureType = TextureImporterType.Sprite;
 		importer.mipmapEnabled = false;
@@ -132,7 +134,7 @@ public class ConverterMenu : MonoBehaviour {
 	#endregion
 
 	#region Convert Widget Selected
-	[MenuItem ("nGUI TO uGUI/Wedgit Convert/Selected")]
+	[MenuItem ("NGUI->UGUI/WedgitConvert/Selected")]
 	static void OnConvertWedgitSelected () {
 		if (Selection.activeGameObject != null){
 			GameObject UGUIRoot = GameObject.Find("CanvasRoot");
@@ -145,7 +147,7 @@ public class ConverterMenu : MonoBehaviour {
 				CanvasScaler canvasScaler = UGUIRoot.AddComponent<CanvasScaler>();
 				GraphicRaycaster graphic = UGUIRoot.AddComponent<GraphicRaycaster>();
 				canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-				canvasScaler.referenceResolution = new Vector2(720, 1080);
+				canvasScaler.referenceResolution = new Vector2(1280, 720);
             }
             else
             {
@@ -154,20 +156,19 @@ public class ConverterMenu : MonoBehaviour {
 
 			foreach (GameObject selectedObject in Selection.gameObjects){
 
+				Transform curUIRoot = selectedObject.transform.parent;
+				if (curUIRoot == null)
+				{
+					curUIRoot = selectedObject.transform;
+				}
+				while (curUIRoot.parent != null)
+				{
+					curUIRoot = curUIRoot.parent;
+				}
+
 				GameObject inProgressObject = (GameObject) Instantiate (selectedObject, selectedObject.transform.position, selectedObject.transform.rotation);
 				inProgressObject.name = selectedObject.name;
-
-				canvasRoot.renderMode = RenderMode.ScreenSpaceCamera;
-                if (selectedObject.transform.parent == null)
-                {
-					canvasRoot.worldCamera = selectedObject.transform.GetComponentInChildren<Camera>();
-				}
-                else
-                {
-					canvasRoot.worldCamera = selectedObject.transform.parent.GetComponentInChildren<Camera>(); // 子节点有存在多个 Camera 组件的情况？？？
-				}
-
-				// 加载创建 Canvas
+				// 如果选中的是ngui根节点 加载创建 Canvas
 				UIRoot uIRoot = inProgressObject.GetComponent<UIRoot>();
 				if (uIRoot != null)
                 {
@@ -182,12 +183,9 @@ public class ConverterMenu : MonoBehaviour {
 						canvas.sortingOrder = uIPanel.depth;
                     }
 
-					DestroyNGUI(uIRoot);
-					DestroyNGUI(uIPanel);
+					DestroyNGUI<UIRoot>(uIRoot);
+					DestroyNGUI<UIPanel>(uIPanel);
 				}
-       
-				inProgressObject.transform.SetParent(canvasRoot.transform);
-
 
 				if (selectedObject.GetComponent<UIWidget>()){
 					OnConvertUIWidget (inProgressObject, canvasRoot, false);
@@ -198,7 +196,7 @@ public class ConverterMenu : MonoBehaviour {
 				}
 
 				if (selectedObject.GetComponent<UILabel>()){
-					OnConvertUILabel (inProgressObject, canvasRoot, false);
+					OnConvertUILabel (inProgressObject, canvasRoot, curUIRoot, false);
 				}
 
 				if (selectedObject.GetComponent<UIToggle>()){
@@ -225,64 +223,64 @@ public class ConverterMenu : MonoBehaviour {
 					OnConvertUIButton (inProgressObject, canvasRoot, false);
 				}
 
-#if PopupLists
-				if (selectedObject.GetComponent<UIPopupList>()){
+				if (selectedObject.GetComponent<UIPopupList>())
+				{
 					inProgressObject.name = selectedObject.name;
-					OnConvertUIButton (inProgressObject, canvasRoot, false);
+					OnConvertUIButton(inProgressObject, canvasRoot, false);
 				}
-#endif
 
-				UIWidget[] UIWidgetsOnChilderens = inProgressObject.GetComponentsInChildren<UIWidget>();
-				UISprite[] UISpritesOnChilderens = inProgressObject.GetComponentsInChildren<UISprite>();
-				UILabel[] UILablesOnChilderens = inProgressObject.GetComponentsInChildren<UILabel>();
-				UIButton[] UIButtonsOnChilderens = inProgressObject.GetComponentsInChildren<UIButton>();
-				UIToggle[] UITogglesOnChilderens = inProgressObject.GetComponentsInChildren<UIToggle>();
-				UIInput[] UIInputsOnChilderens = inProgressObject.GetComponentsInChildren<UIInput>();
-				UIScrollBar[] UIScrollBarsOnChilderens = inProgressObject.GetComponentsInChildren<UIScrollBar>();
-				UISlider[] UISlidersOnChilderens = inProgressObject.GetComponentsInChildren<UISlider>();
-#if PopupLists
-				UIPopupList[] UIPopuplistsOnChilderens = inProgressObject.GetComponentsInChildren<UIPopupList>();
-#endif
+				List<UIWidget> UIWidgetsOnChilderens = GetChildCmp<UIWidget>(inProgressObject);
+				List<UISprite> UISpritesOnChilderens = GetChildCmp<UISprite>(inProgressObject);
+				List<UILabel> UILablesOnChilderens = GetChildCmp<UILabel>(inProgressObject);
+				List<UIButton> UIButtonsOnChilderens = GetChildCmp<UIButton>(inProgressObject);
+				List<UIToggle> UITogglesOnChilderens = GetChildCmp<UIToggle>(inProgressObject);
+				List<UIInput> UIInputsOnChilderens = GetChildCmp<UIInput>(inProgressObject);
+				List<UIScrollBar> UIScrollBarsOnChilderens = GetChildCmp<UIScrollBar>(inProgressObject);
+				List<UISlider> UISlidersOnChilderens = GetChildCmp<UISlider>(inProgressObject);
+				List <UIPopupList> UIPopuplistsOnChilderens = GetChildCmp<UIPopupList>(inProgressObject);
 
-				for (int a=0; a<UIWidgetsOnChilderens.Length; a++){
+				for (int a=0; a<UIWidgetsOnChilderens.Count; a++){
 					if (!UIWidgetsOnChilderens[a].gameObject.GetComponent<RectTransform>()){
 						OnConvertUIWidget (UIWidgetsOnChilderens[a].gameObject, canvasRoot, true);
 					}
 				}
 
-				for (int b=0; b<UISpritesOnChilderens.Length; b++){
+				for (int b=0; b<UISpritesOnChilderens.Count; b++){
 					OnConvertUISprite (UISpritesOnChilderens[b].gameObject, canvasRoot, true);
 				}
 
-				for (int c=0; c<UILablesOnChilderens.Length; c++){
-					OnConvertUILabel (UILablesOnChilderens[c].gameObject, canvasRoot, true);
+				for (int c=0; c<UILablesOnChilderens.Count; c++){
+					OnConvertUILabel (UILablesOnChilderens[c].gameObject, canvasRoot, curUIRoot, true);
 				}
 
-				for (int d=0; d<UIButtonsOnChilderens.Length; d++){
+				for (int d=0; d<UIButtonsOnChilderens.Count; d++){
 					OnConvertUIButton (UIButtonsOnChilderens[d].gameObject, canvasRoot, true);
 				}
 
-				for (int e=0; e<UITogglesOnChilderens.Length; e++){
+				for (int e=0; e<UITogglesOnChilderens.Count; e++){
 					OnConvertUIToggle (UITogglesOnChilderens[e].gameObject, canvasRoot, true);
 				}
 
-				for (int f=0; f<UIInputsOnChilderens.Length; f++){
+				for (int f=0; f<UIInputsOnChilderens.Count; f++){
 					OnConvertUIInput (UIInputsOnChilderens[f].gameObject, canvasRoot, true);
 				}
-				for (int g=0; g<UIScrollBarsOnChilderens.Length; g++){
+				for (int g=0; g<UIScrollBarsOnChilderens.Count; g++){
 					OnConvertUIScrollBar (UIScrollBarsOnChilderens[g].gameObject, canvasRoot, true);
 				}
-				for (int h=0; h<UISlidersOnChilderens.Length; h++){
+				for (int h=0; h<UISlidersOnChilderens.Count; h++){
 					OnConvertUISlider (UISlidersOnChilderens[h].gameObject, canvasRoot, true);
 				}
 #if PopupLists
-				for (int i=0; i<UIPopuplistsOnChilderens.Length; i++){
+				for (int i=0; i<UIPopuplistsOnChilderens.Count; i++){
 					OnConvertUIPopuplist (UIPopuplistsOnChilderens[i].gameObject, canvasRoot, true);
 				}
 #endif
 				OnAdjustSliders(inProgressObject);
 				OnCleanConvertedItem(inProgressObject);
-			}
+
+				inProgressObject.transform.SetParent(canvasRoot.transform);
+			}//foreach_end
+			
 			canvasRoot.transform.parent = null;
 			canvasRoot.worldCamera = null;
 			canvasRoot.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -292,6 +290,20 @@ public class ConverterMenu : MonoBehaviour {
 			Debug.LogError ("<Color=red>NO NGUI-Wedgits SELECTED</Color>, <Color=yellow>Please select at least one wedgit to convert</Color>");
 		}
 	}
+
+	private static List<T> GetChildCmp<T>(GameObject root)
+    {
+		List<T> ls = new List<T>();
+        for (int i = 0; i < root.transform.childCount; i++)
+        {
+			var temp = root.transform.GetChild(i).GetComponent<T>();
+            if (temp != null)
+            {
+				ls.Add(temp);
+			}
+		}
+		return ls;
+    }
 		
 	#endregion
 
@@ -306,7 +318,7 @@ public class ConverterMenu : MonoBehaviour {
 			else
 			{
 				Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyNGUI (selectedObject.gameObject);
+				DestroyNGUI<GameObject>(selectedObject.gameObject);
 				return;
 			}
 		}
@@ -314,18 +326,19 @@ public class ConverterMenu : MonoBehaviour {
 		selectedObject.name = selectedObject.name;
 		selectedObject.transform.position = selectedObject.transform.position;
 
-		RectTransform addedRectT = selectedObject.AddComponent<RectTransform>();
-		addedRectT.pivot = selectedObject.GetComponent<UIWidget>().pivotOffset;
-		addedRectT.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
-		addedRectT.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		RectTransform rect = selectedObject.AddComponent<RectTransform>();
+		rect.pivot = selectedObject.GetComponent<UIWidget>().pivotOffset;
+		rect.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+		rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
 	}
 	#endregion
 
 	#region UISprites Converter
 	static void OnConvertUISprite(GameObject selectedObject, Canvas canvas, bool isSubConvert){
 		UISprite sprite = selectedObject.GetComponent<UISprite>();
-		if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+ sprite.atlas.texture.name+".png")){
-			Debug.Log ("The Atlas <color=yellow>" + sprite.atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
+		if (File.Exists(AtlasConvertPath+ sprite.atlas.texture.name+".png")){
+			Debug.Log ("The Atlas <color=yellow>" + sprite.atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"Assets/NGUITOUGUI/AtlasConvert\" </color>Directory");
 		}else{
 			ConvertAtlas(sprite);
 		}
@@ -336,7 +349,7 @@ public class ConverterMenu : MonoBehaviour {
 				selectedObject.transform.SetParent(canvas.transform);
 			}else{
 				Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyNGUI(selectedObject.gameObject);
+				DestroyNGUI<GameObject>(selectedObject.gameObject);
 				return;
 			}
 		}
@@ -349,14 +362,15 @@ public class ConverterMenu : MonoBehaviour {
 		}else{
 			addedImage = selectedObject.AddComponent<Image>();
 		}
-		UISprite originalSprite = selectedObject.GetComponent<UISprite>();
 
-		//adjust the rect transform to fit the original one's size
-		selectedObject.GetComponent<RectTransform>().pivot = originalSprite.pivotOffset;
-		selectedObject.GetComponent<RectTransform>().sizeDelta = originalSprite.localSize;
-		selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
-		
-		Sprite[] sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalSprite.atlas.texture.name + ".png").OfType<Sprite>().ToArray();
+		UISprite originalSprite = selectedObject.GetComponent<UISprite>();
+		RectTransform rect = selectedObject.GetComponent<RectTransform>();
+		rect.pivot = originalSprite.pivotOffset;
+		rect.sizeDelta = originalSprite.localSize;
+		rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+
+		Sprite[] sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(AtlasConvertPath + originalSprite.atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 		for (int c=0; c<sprites.Length; c++){
 			if (sprites[c].name == originalSprite.spriteName){
 				addedImage.sprite = sprites[c];
@@ -394,25 +408,28 @@ public class ConverterMenu : MonoBehaviour {
 	#endregion
 
 	#region UILabels Converter
-	static void OnConvertUILabel(GameObject selectedObject, Canvas canvas, bool isSubConvert){
+	static void OnConvertUILabel(GameObject selectedObject, Canvas canvas, Transform curUIRoot, bool isSubConvert){
 		selectedObject.layer = LayerMask.NameToLayer ("UI");
 		if (!isSubConvert){
 			if (canvas){
 				selectedObject.transform.SetParent(canvas.transform);
 			}else{
 				Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyNGUI (selectedObject.gameObject);
+				DestroyNGUI<GameObject>(selectedObject.gameObject);
 				return;
 			}
 		}
-		//to adjust the text issue
+
+
+		RectTransform rect = selectedObject.GetComponent<RectTransform>();
 		if (selectedObject.GetComponent <UILabel>().overflowMethod == UILabel.Overflow.ResizeHeight){
-			selectedObject.GetComponent<RectTransform>().pivot = new Vector2(selectedObject.GetComponent<RectTransform>().pivot.x, 1.0f);
+			rect.pivot = new Vector2(selectedObject.GetComponent<RectTransform>().pivot.x, 1.0f);
 		}
-		selectedObject.GetComponent<RectTransform>().pivot = selectedObject.GetComponent<UILabel>().pivotOffset; // TODO
-		selectedObject.transform.position = selectedObject.transform.position;
-		selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UILabel>().localSize;
-		selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+
+		rect.pivot = selectedObject.GetComponent<UILabel>().pivotOffset; // TODO
+		rect.sizeDelta = selectedObject.GetComponent<UILabel>().localSize;
+		rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
 
 
 		Text tempText = selectedObject.AddComponent<Text>();
@@ -446,161 +463,133 @@ public class ConverterMenu : MonoBehaviour {
 			}else if (originalText.alignment == NGUIText.Alignment.Right){
 				tempText.alignment = TextAnchor.UpperRight;
 			}
-
-
 		}
-		// ????
+
 		if (originalText.gameObject.GetComponent<TypewriterEffect>()){
 			originalText.gameObject.AddComponent<uUITypewriterEffect>();
-			DestroyNGUI(originalText.gameObject.GetComponent<TypewriterEffect>());
+			DestroyNGUI<TypewriterEffect>(originalText.gameObject.GetComponent<TypewriterEffect>());
 		}
-
-		#region 根据分辨率 转化坐标
-		Vector3 targetPos = canvas.worldCamera.WorldToScreenPoint(selectedObject.transform.position);
-		RectTransform canvasRt = canvas.GetComponent<RectTransform>();
-		float resolutionRatioWidth = canvasRt.sizeDelta.x;
-		float resolutionRatioHeight = canvasRt.sizeDelta.y;
-		float widthRatio = resolutionRatioWidth / Screen.width;
-		float heightRatio = resolutionRatioHeight / Screen.height;
-		//先分别乘以宽高比值
-		targetPos.x *= widthRatio;
-		targetPos.y *= heightRatio;
-		//计算在中心点的屏幕坐标
-		targetPos.x -= resolutionRatioWidth * 0.5f;
-		targetPos.y -= resolutionRatioHeight * 0.5f;
-		selectedObject.GetComponent<RectTransform>().anchoredPosition3D = new Vector3(targetPos.x, targetPos.y, 0);
-		#endregion
-
 	}
 	#endregion
 
 	#region UIButtons Converter
-	static void OnConvertUIButton(GameObject selectedObject,Canvas canvas, bool isSubConvert){
-		/*
-		UIAtlas tempNguiAtlas;
-		tempNguiAtlas = selectedObject.GetComponent<UISprite>().atlas;
-		if (File.Exists("Assets/nGUI TO uUI/CONVERSION_DATA/"+tempNguiAtlas.name+".png")){
-			Debug.Log ("The Atlas <color=yellow>" + tempNguiAtlas.name + " </color>was Already Converted, Check the<color=yellow> \"nGUI TO uUI/CONVERSION_DATA\" </color>Directory");
-		}else{
-			ConvertAtlas(tempNguiAtlas);
+	static void OnConvertUIButton(GameObject selectedObject,Canvas canvas, bool isSubConvert)
+	{
+		if (selectedObject.GetComponent<Scrollbar>() || selectedObject.GetComponent<Slider>())
+		{
+			return;
 		}
-		*/
-		if (selectedObject.GetComponent<Scrollbar>() || selectedObject.GetComponent<Slider>()){
+
+		selectedObject.layer = LayerMask.NameToLayer ("UI");
+		if (!isSubConvert){
+			if (GameObject.FindObjectOfType<Canvas>()){
+				selectedObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
+			}else{
+				Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
+				DestroyNGUI<GameObject>(selectedObject.gameObject);
+				return;
+			}
+		}
+			
+		//to easliy control the old and the new sprites and buttons
+		Button addedButton;
+		UIButton originalButton;
+			
+		//define the objects of the previous variables
+		if (selectedObject.GetComponent<Button>()){
+			addedButton = selectedObject.GetComponent<Button>();
+		}else{
+			addedButton = selectedObject.AddComponent<Button>();
+		}
+		originalButton = selectedObject.GetComponent<UIButton>();
+
+
+		RectTransform rect = selectedObject.GetComponent<RectTransform>();
+		if (rect == null){
+			rect = selectedObject.AddComponent<RectTransform>();
+		}
+		if (originalButton.GetComponent<UISprite>()){
+			rect.sizeDelta = originalButton.GetComponent<UISprite>().localSize;
+			rect.pivot = originalButton.GetComponent<UISprite>().pivotOffset;
+		}else if (originalButton.GetComponent<UIWidget>()){
+			rect.sizeDelta = originalButton.GetComponent<UIWidget>().localSize;
+			rect.pivot = originalButton.GetComponent<UIWidget>().pivotOffset;
+		}else{
+			rect.sizeDelta = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().localSize;
+			rect.pivot = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().pivotOffset;
+		}
+		selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+
+		//if the object ahve no UISprites, then a sub object must have!
+		Sprite[] sprites;
+		if (originalButton.GetComponent<UISprite>()){
+			sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(AtlasConvertPath + originalButton.GetComponent<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
+		}else{
+			sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(AtlasConvertPath + originalButton.gameObject.GetComponentInChildren<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
+		}
+
+		if (selectedObject.gameObject.GetComponent<UIToggle>()){
 
 		}else{
-			selectedObject.layer = LayerMask.NameToLayer ("UI");
-			if (!isSubConvert){
-				if (GameObject.FindObjectOfType<Canvas>()){
-					selectedObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
-				}else{
-					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI (selectedObject.gameObject);
-					return;
+			SpriteState tempState = addedButton.spriteState;
+			for (int c=0; c<sprites.Length; c++){
+				//Apply the sprite swap option, just in case the user have it. // Used several If statement, just in case a user using the same sprite to define more than one state
+				if (sprites[c].name == originalButton.hoverSprite){
+					tempState.highlightedSprite = sprites[c];
 				}
-			}
-			
-			//to easliy control the old and the new sprites and buttons
-			Button addedButton;
-			UIButton originalButton;
-			
-			//define the objects of the previous variables
-			if (selectedObject.GetComponent<Button>()){
-				addedButton = selectedObject.GetComponent<Button>();
-			}else{
-				addedButton = selectedObject.AddComponent<Button>();
-			}
-			originalButton = selectedObject.GetComponent<UIButton>();
-			
-			//adjust the rect transform to fit the original one's size..If it have no sprite, then it must had a widget
-			if (selectedObject.GetComponent<RectTransform>()){
-
-			}else{
-				selectedObject.AddComponent<RectTransform>();
-			}
-
-			if (originalButton.GetComponent<UISprite>()){
-				selectedObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UISprite>().localSize;
-				selectedObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UISprite>().pivotOffset;
-			}else if (originalButton.GetComponent<UIWidget>()){
-				selectedObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UIWidget>().localSize;
-				selectedObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UIWidget>().pivotOffset;
-			}else{
-				selectedObject.GetComponent<RectTransform>().sizeDelta = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().localSize;
-				selectedObject.GetComponent<RectTransform>().pivot = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().pivotOffset;
-			}
-			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
-
-			//if the object ahve no UISprites, then a sub object must have!
-			Sprite[] sprites;
-			if (originalButton.GetComponent<UISprite>()){
-				sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalButton.GetComponent<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
-			}else{
-				sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + originalButton.gameObject.GetComponentInChildren<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
-			}
-
-			if (selectedObject.gameObject.GetComponent<UIToggle>()){
-
-			}else{
-				SpriteState tempState = addedButton.spriteState;
-				for (int c=0; c<sprites.Length; c++){
-					//Apply the sprite swap option, just in case the user have it. // Used several If statement, just in case a user using the same sprite to define more than one state
-					if (sprites[c].name == originalButton.hoverSprite){
-						tempState.highlightedSprite = sprites[c];
-					}
-					if (sprites[c].name == originalButton.pressedSprite){
-						tempState.pressedSprite = sprites[c];
-					}
-					if (sprites[c].name == originalButton.disabledSprite){
-						tempState.disabledSprite = sprites[c];
-					}
-					addedButton.spriteState = tempState;
+				if (sprites[c].name == originalButton.pressedSprite){
+					tempState.pressedSprite = sprites[c];
 				}
+				if (sprites[c].name == originalButton.disabledSprite){
+					tempState.disabledSprite = sprites[c];
+				}
+				addedButton.spriteState = tempState;
 			}
+		}
 			
-			//set the button colors and the fade duration
-			if (originalButton.GetComponent<UISprite>()){
-				ColorBlock tempColor = addedButton.colors;
-				tempColor.normalColor = originalButton.GetComponent<UISprite>().color;
-				tempColor.highlightedColor = originalButton.hover;
-				tempColor.pressedColor = originalButton.pressed;
-				tempColor.disabledColor = originalButton.disabledColor;
-				tempColor.fadeDuration = originalButton.duration;
-				addedButton.colors = tempColor;
-			}
+		//set the button colors and the fade duration
+		if (originalButton.GetComponent<UISprite>()){
+			ColorBlock tempColor = addedButton.colors;
+			tempColor.normalColor = originalButton.GetComponent<UISprite>().color;
+			tempColor.highlightedColor = originalButton.hover;
+			tempColor.pressedColor = originalButton.pressed;
+			tempColor.disabledColor = originalButton.disabledColor;
+			tempColor.fadeDuration = originalButton.duration;
+			addedButton.colors = tempColor;
+		}
 
-			if (selectedObject.gameObject.GetComponent<UIToggle>()){
+		if (selectedObject.gameObject.GetComponent<UIToggle>()){
 
+		}else{
+			//if the button is using some sprites, then switch the transitons into the swap type. otherwise, keep it with the color tint!
+			if (originalButton.hoverSprite != "" &&
+				originalButton.pressedSprite != "" &&
+				originalButton.disabledSprite != ""){
+				//addedButton.transition = Selectable.Transition.SpriteSwap;
+				addedButton.transition = Selectable.Transition.ColorTint;
 			}else{
-				//if the button is using some sprites, then switch the transitons into the swap type. otherwise, keep it with the color tint!
-				if (originalButton.hoverSprite != "" &&
-				    originalButton.pressedSprite != "" &&
-				    originalButton.disabledSprite != ""){
-					//addedButton.transition = Selectable.Transition.SpriteSwap;
-					addedButton.transition = Selectable.Transition.ColorTint;
-				}else{
-					addedButton.transition = Selectable.Transition.ColorTint;
-				}
+				addedButton.transition = Selectable.Transition.ColorTint;
 			}
+		}
 
-			//check if the parent was converted into a scrollbar
-			if (selectedObject.transform.GetComponentInParent<Scrollbar>()){
-				selectedObject.transform.GetComponentInParent<Scrollbar>().handleRect = selectedObject.GetComponent<RectTransform>();
-				selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(selectedObject.GetComponent<UISprite>().rightAnchor.absolute*2
-				                                                                 , selectedObject.GetComponent<UISprite>().topAnchor.absolute*2);
+		//check if the parent was converted into a scrollbar
+		if (selectedObject.transform.GetComponentInParent<Scrollbar>()){
+			selectedObject.transform.GetComponentInParent<Scrollbar>().handleRect = selectedObject.GetComponent<RectTransform>();
+			selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(selectedObject.GetComponent<UISprite>().rightAnchor.absolute*2
+				                                                                , selectedObject.GetComponent<UISprite>().topAnchor.absolute*2);
+		}
+
+		//check if the parent was converted into a slider
+		if (selectedObject.transform.GetComponentInParent<Slider>()){
+			selectedObject.transform.GetComponentInParent<Slider>().handleRect = selectedObject.GetComponent<RectTransform>();
+			if (selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.LeftToRight || selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.RightToLeft){
+				selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.x)
+					                                                                ,Mathf.Abs(selectedObject.GetComponent<UISprite>().topAnchor.absolute*2));
+			}else{
+				selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().leftAnchor.absolute*2),
+					                                                                Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.y));
 			}
-
-			//check if the parent was converted into a slider
-			if (selectedObject.transform.GetComponentInParent<Slider>()){
-				selectedObject.transform.GetComponentInParent<Slider>().handleRect = selectedObject.GetComponent<RectTransform>();
-				if (selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.LeftToRight || selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.RightToLeft){
-					selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.x)
-					                                                                 ,Mathf.Abs(selectedObject.GetComponent<UISprite>().topAnchor.absolute*2));
-				}else{
-					selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().leftAnchor.absolute*2),
-					                                                                 Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.y));
-				}
-			}
-
 		}
 	}
 	#endregion
@@ -616,19 +605,20 @@ public class ConverterMenu : MonoBehaviour {
 					selectedObject.transform.SetParent(canvas.transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI (selectedObject.gameObject);
+					DestroyNGUI<GameObject>(selectedObject.gameObject);
 					return;
 				}
 			}
 						
+
+			RectTransform rect = selectedObject.GetComponent<RectTransform>();
+			rect.pivot = selectedObject.GetComponent<UIWidget>().pivotOffset;
+			rect.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+
 			Toggle addedToggle = selectedObject.AddComponent<Toggle>();
 			uUIToggle addedToggleController = selectedObject.AddComponent<uUIToggle>();
-
-			selectedObject.GetComponent<RectTransform>().pivot = selectedObject.GetComponent<UIWidget>().pivotOffset;
-			selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
-			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
-
-
 			//addedToggle
 			addedToggleController.Group = selectedObject.GetComponent<UIToggle>().group;
 			addedToggleController.StateOfNone = selectedObject.GetComponent<UIToggle>().optionCanBeNone;
@@ -638,7 +628,7 @@ public class ConverterMenu : MonoBehaviour {
 			for (int x=0; x< childImages.Length; x++){
 				if (childImages[x].spriteName == selectedObject.GetComponent<UIToggle>().activeSprite.gameObject.GetComponent<UISprite>().spriteName){
 					Sprite[] sprites;
-					sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath("Assets/nGUI TO uUI/CONVERSION_DATA/" + childImages[x].atlas.texture.name + ".png").OfType<Sprite>().ToArray();
+					sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(AtlasConvertPath + childImages[x].atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 					for (int c=0; c<sprites.Length; c++){
 						if (sprites[c].name == childImages[x].spriteName){
 							addedToggleController.m_Sprite = sprites[c];
@@ -660,17 +650,17 @@ public class ConverterMenu : MonoBehaviour {
 					selectedObject.transform.SetParent(canvas.transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI (selectedObject.gameObject);
+					DestroyNGUI<GameObject>(selectedObject.gameObject);
 					return;
 				}
 			}
 
+			RectTransform rect = selectedObject.GetComponent<RectTransform>();
+			rect.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+
 			InputField newInputField = selectedObject.AddComponent<InputField>();
-			//tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UILabel>().pivotOffset;
-			selectedObject.transform.position = selectedObject.transform.position;
-			selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
-			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
-			
 			ColorBlock tempColor = newInputField.colors;
 			tempColor.normalColor = selectedObject.GetComponent<UIInput>().activeTextColor;
 			tempColor.pressedColor = selectedObject.GetComponent<UIInput>().caretColor;
@@ -718,32 +708,33 @@ public class ConverterMenu : MonoBehaviour {
 					selectedObject.transform.SetParent(canvas.transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI (selectedObject.gameObject);
+					DestroyNGUI<GameObject>(selectedObject.gameObject);
 					return;
 				}
 			}
 
             if (selectedObject.GetComponent<Button>())
             {
-				DestroyNGUI(selectedObject.GetComponent<Button>());
+				DestroyNGUI<Button>(selectedObject.GetComponent<Button>());
 			}
 			Scrollbar newScrollbar = selectedObject.AddComponent<Scrollbar>();
 			if (selectedObject.GetComponent<UIButton>()){
-				DestroyNGUI (selectedObject.GetComponent<UIButton>());
+				DestroyNGUI<UIButton>(selectedObject.GetComponent<UIButton>());
 			}
-			//selectedObject.GetComponent<RectTransform>().pivot = selectedObject.GetComponent<UILabel>().pivotOffset;
-			if (selectedObject.GetComponent<UIWidget>() != null)
-            {
-				selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
-			}
-			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
-			UIScrollBar oldScrollbar = selectedObject.GetComponent<UIScrollBar>();
+			RectTransform rect = selectedObject.GetComponent<RectTransform>();
+			if (rect != null)
+			{
+				rect.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			}
+			rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
 
 			/* // replaced with an assignment on the end of the buttons conversion
 			newScrollbar.handleRect = newScrollbar.gameObject.transform.FindChild(oldScrollbar.foregroundWidget.name).gameObject.GetComponent<RectTransform>();
 			*/
 
+			UIScrollBar oldScrollbar = selectedObject.GetComponent<UIScrollBar>();
 			newScrollbar.numberOfSteps = oldScrollbar.numberOfSteps;
 			newScrollbar.value = oldScrollbar.value;
 			newScrollbar.size = oldScrollbar.barSize;
@@ -778,7 +769,7 @@ public class ConverterMenu : MonoBehaviour {
 					selectedObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI (selectedObject.gameObject);
+					DestroyNGUI<GameObject>(selectedObject.gameObject);
 					return;
 				}
 			}
@@ -786,18 +777,18 @@ public class ConverterMenu : MonoBehaviour {
 			Slider newSlider = selectedObject.AddComponent<Slider>();
 			
 			if (selectedObject.GetComponent<UIButton>()){
-				DestroyNGUI (selectedObject.GetComponent<UIButton>());
+				DestroyNGUI<UIButton>(selectedObject.GetComponent<UIButton>());
 			}
-			//tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UILabel>().pivotOffset;
-			selectedObject.transform.position = selectedObject.transform.position;
-            if (selectedObject.GetComponent<UIWidget>() != null)
-            {
-				selectedObject.GetComponent<RectTransform>().sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
-			}
-			selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
-			
-			UISlider oldSlider = selectedObject.GetComponent<UISlider>();
 
+			RectTransform rect = selectedObject.GetComponent<RectTransform>();
+            if (rect != null)
+            {
+				rect.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			}
+			rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+
+			UISlider oldSlider = selectedObject.GetComponent<UISlider>();
 			//witht the fact of the ngui limitations of 0:1
 			if (newSlider){
 				newSlider.minValue = 0;
@@ -865,18 +856,17 @@ public class ConverterMenu : MonoBehaviour {
 					tempObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
 				}else{
 					Debug.LogError ("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI (tempObject.gameObject);
+					DestroyNGUI<GameObject>(tempObject.gameObject);
 					return;
 				}
 			}
-			
-			newPopuplist = tempObject.AddComponent<uUIPopupList>();
 
-			//tempObject.GetComponent<RectTransform>().pivot = tempObject.GetComponent<UILabel>().pivotOffset;
-			tempObject.transform.position = selectedObject.transform.position;
-			tempObject.GetComponent<RectTransform>().sizeDelta = tempObject.GetComponent<UIWidget>().localSize;
-			tempObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
-			
+			RectTransform rect = selectedObject.GetComponent<RectTransform>();
+			rect.sizeDelta = tempObject.GetComponent<UIWidget>().localSize;
+			rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+
+			newPopuplist = tempObject.AddComponent<uUIPopupList>();
 			UIPopupList oldPopuplist = selectedObject.GetComponent<UIPopupList>();
 
 			if (newPopuplist){
@@ -939,64 +929,72 @@ public class ConverterMenu : MonoBehaviour {
 
 		for (int a=0; a<UIWidgetsOnChilderens.Length; a++){
 			if (UIWidgetsOnChilderens[a]){
-				DestroyNGUI (UIWidgetsOnChilderens[a]);
+                if (UIWidgetsOnChilderens[a].GetComponent<SetColorPickerColor>())
+                {
+					DestroyNGUI<SetColorPickerColor>(UIWidgetsOnChilderens[a].GetComponent<SetColorPickerColor>());
+				}
+				if (UIWidgetsOnChilderens[a].GetComponent<UIColorPicker>())
+				{
+					DestroyNGUI<UIColorPicker>(UIWidgetsOnChilderens[a].GetComponent<UIColorPicker>());
+				}
+				DestroyNGUI<UIWidget>(UIWidgetsOnChilderens[a]);
 			}
 		}
 		
 		for (int b=0; b<UISpritesOnChilderens.Length; b++){
 			if (UISpritesOnChilderens[b]){
-				DestroyNGUI (UISpritesOnChilderens[b]);
+				DestroyNGUI<UISprite>(UISpritesOnChilderens[b]);
 			}
 		}
 		
 		for (int c=0; c<UILablesOnChilderens.Length; c++){
 			if (UILablesOnChilderens[c]){
-				DestroyNGUI (UILablesOnChilderens[c]);
+				DestroyNGUI<UILabel>(UILablesOnChilderens[c]);
 			}
 		}
 		
 		for (int d=0; d<UIButtonsOnChilderens.Length; d++){
 			if (UIButtonsOnChilderens[d]){
-				DestroyNGUI (UIButtonsOnChilderens[d]);
+				DestroyNGUI<UIButton>(UIButtonsOnChilderens[d]);
 			}
 		}
 		
 		for (int e=0; e<UITogglesOnChilderens.Length; e++){
 			if(UITogglesOnChilderens[e]){
-				DestroyNGUI (UITogglesOnChilderens[e]);
+				DestroyNGUI<UIToggle>(UITogglesOnChilderens[e]);
 			}
 		}
 
 		for (int f=0; f<UIInputsOnChilderens.Length; f++){
 			if (UIInputsOnChilderens[f]){
-				DestroyNGUI (UIInputsOnChilderens[f]);
+				DestroyNGUI<UIInput>(UIInputsOnChilderens[f]);
 			}
 		}
 
 		for (int g=0; g<UIScrollBarsOnChilderens.Length; g++){
 			if (UIScrollBarsOnChilderens[g]){
-				DestroyNGUI(UIScrollBarsOnChilderens[g]);
+				DestroyNGUI<UIScrollBar>(UIScrollBarsOnChilderens[g]);
 			}
 		}
 
 		for (int h=0; h<UISlidersOnChilderens.Length; h++){
 			if (UISlidersOnChilderens[h]){
 				if (UISlidersOnChilderens[h].GetComponent<UISliderColors>()){
-					DestroyNGUI(UISlidersOnChilderens[h].gameObject.GetComponent<UISliderColors>());
+					DestroyNGUI<UISliderColors>(UISlidersOnChilderens[h].gameObject.GetComponent<UISliderColors>());
 				}
-				DestroyNGUI(UISlidersOnChilderens[h]);
+				DestroyNGUI<UISlider>(UISlidersOnChilderens[h]);
 			}
 		}
 #if PopupLists
 		for (int h=0; h<UIPopuplistsOnChilderens.Length; h++){
 			if (UIPopuplistsOnChilderens[h]){
-				DestroyNGUI (UIPopuplistsOnChilderens[h]);
+				DestroyNGUI<UISlider>(UIPopuplistsOnChilderens[h]);
 			}
 		}
 #endif
 		for (int z=0; z<CollidersOnChilderens.Length; z++){
 			if (CollidersOnChilderens[z]){
-				DestroyNGUI(CollidersOnChilderens[z]);
+				DestroyNGUI<Collider>(CollidersOnChilderens[z]);
 			}
 		}
 
@@ -1015,7 +1013,7 @@ public class ConverterMenu : MonoBehaviour {
 	}
 	#endregion
 
-	static void DestroyNGUI(Object cmp)
+	static void DestroyNGUI<T>(Object cmp)
     {
 		try
 		{
