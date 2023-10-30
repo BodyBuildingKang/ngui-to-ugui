@@ -4,41 +4,26 @@ using UnityEngine.UI;
 public partial class ConverterMenu
 {
 	#region UISlider Converter
-	static void OnConvertUISlider(GameObject selectedObject, Canvas canvas, bool isSubConvert)
+	static void OnConvertUISlider(GameObject newUGUIObj, Canvas canvas, bool isSubConvert)
 	{
-		if (selectedObject.GetComponent<Slider>() != null)
+		if (newUGUIObj.GetComponent<Slider>() != null)
 		{
-			selectedObject.layer = LayerMask.NameToLayer("UI");
-			if (!isSubConvert)
+			Slider newSlider = newUGUIObj.AddComponent<Slider>();
+
+			if (newUGUIObj.GetComponent<UIButton>())
 			{
-				if (GameObject.FindObjectOfType<Canvas>())
-				{
-					selectedObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
-				}
-				else
-				{
-					Debug.LogError("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI<GameObject>(selectedObject.gameObject);
-					return;
-				}
+				DestroyNGUI<UIButton>(newUGUIObj.GetComponent<UIButton>());
 			}
 
-			Slider newSlider = selectedObject.AddComponent<Slider>();
-
-			if (selectedObject.GetComponent<UIButton>())
-			{
-				DestroyNGUI<UIButton>(selectedObject.GetComponent<UIButton>());
-			}
-
-			RectTransform rect = selectedObject.GetComponent<RectTransform>();
+			RectTransform rect = newUGUIObj.GetComponent<RectTransform>();
 			if (rect != null)
 			{
-				rect.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+				rect.sizeDelta = newUGUIObj.GetComponent<UIWidget>().localSize;
 			}
 			rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+			SetNewUGUIPos(rect, newUGUIObj, canvas, isSubConvert);
 
-			UISlider oldSlider = selectedObject.GetComponent<UISlider>();
+			UISlider oldSlider = newUGUIObj.GetComponent<UISlider>();
 			//witht the fact of the ngui limitations of 0:1
 			if (newSlider)
 			{
@@ -63,13 +48,13 @@ public partial class ConverterMenu
 					newSlider.direction = Slider.Direction.TopToBottom;
 				}
 
-				for (int x = 0; x < selectedObject.GetComponent<UISlider>().onChange.Capacity; x++)
+				for (int x = 0; x < newUGUIObj.GetComponent<UISlider>().onChange.Capacity; x++)
 				{
-					if (selectedObject.GetComponent<UISlider>().onChange[x].methodName == "SetCurrentPercent")
+					if (newUGUIObj.GetComponent<UISlider>().onChange[x].methodName == "SetCurrentPercent")
 					{
 						//Debug.Log ("<Color=blue> HERE </Color>");
-						selectedObject.GetComponentInChildren<UILabel>().gameObject.AddComponent<uUIGetSliderPercentageValue>();
-						selectedObject.GetComponentInChildren<uUIGetSliderPercentageValue>().sliderObject = selectedObject.GetComponent<Slider>();
+						newUGUIObj.GetComponentInChildren<UILabel>().gameObject.AddComponent<uUIGetSliderPercentageValue>();
+						newUGUIObj.GetComponentInChildren<uUIGetSliderPercentageValue>().sliderObject = newUGUIObj.GetComponent<Slider>();
 					}
 				}
 

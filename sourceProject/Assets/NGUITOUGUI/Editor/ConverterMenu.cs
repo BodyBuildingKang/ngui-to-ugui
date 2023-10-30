@@ -70,9 +70,7 @@ public partial class ConverterMenu : MonoBehaviour {
 		if (Selection.activeGameObject != null){
 			Canvas canvasRoot = GetCanvasRoot();
 			foreach (GameObject selectedObject in Selection.gameObjects){
-				var pos = selectedObject.transform.position;
-				var ros = selectedObject.transform.rotation;
-				GameObject inProgressObject = (GameObject)Instantiate(selectedObject, pos, ros);
+				GameObject inProgressObject = (GameObject)Instantiate(selectedObject);
 				inProgressObject.name = selectedObject.name;
 				SetUIRoot(inProgressObject);
 				OnConvertUIRoot(selectedObject, inProgressObject, canvasRoot);
@@ -83,7 +81,6 @@ public partial class ConverterMenu : MonoBehaviour {
 			}//foreach_end
 			canvasRoot.transform.parent = null;
 			canvasRoot.worldCamera = null;
-			canvasRoot.renderMode = RenderMode.ScreenSpaceOverlay;
 			Debug.Log("转换完成");
 		}
 		else{
@@ -163,27 +160,23 @@ public partial class ConverterMenu : MonoBehaviour {
 
 		if (selectedObject.GetComponent<UIScrollBar>())
 		{
-			inProgressObject.name = selectedObject.name;
 			OnConvertUIScrollBar(inProgressObject, canvasRoot, false);
 		}
 
 		if (selectedObject.GetComponent<UISlider>())
 		{
-			inProgressObject.name = selectedObject.name;
 			OnConvertUISlider(inProgressObject, canvasRoot, false);
 		}
 
 
 		if (selectedObject.GetComponent<UIButton>())
 		{
-			inProgressObject.name = selectedObject.name;
 			OnConvertUIButton(inProgressObject, canvasRoot, false);
 		}
 
 		if (selectedObject.GetComponent<UIPopupList>())
 		{
-			inProgressObject.name = selectedObject.name;
-			OnConvertUIButton(inProgressObject, canvasRoot, false);
+			OnConvertUIPopuplist(inProgressObject, canvasRoot, false);
 		}
 	}
 
@@ -240,9 +233,9 @@ public partial class ConverterMenu : MonoBehaviour {
 			OnConvertUISlider(UISlidersOnChilderens[h].gameObject, canvasRoot, true);
 		}
 #if PopupLists
-				for (int i=0; i<UIPopuplistsOnChilderens.Count; i++){
-					OnConvertUIPopuplist (UIPopuplistsOnChilderens[i].gameObject, canvasRoot, true);
-				}
+		for (int i=0; i<UIPopuplistsOnChilderens.Count; i++){
+			OnConvertUIPopuplist (UIPopuplistsOnChilderens[i].gameObject, canvasRoot, true);
+		}
 #endif
 	}
 
@@ -414,5 +407,35 @@ public partial class ConverterMenu : MonoBehaviour {
 			Debug.LogWarning(cmp.name + ": " + cmp.GetType().ToString() + " : " + e.Message);
 			throw;
 		}
+	}
+
+	static bool SetNewUGUIParent(GameObject selectedObject, bool isSubConvert, Canvas canvas)
+    {
+		if (!isSubConvert)
+		{
+			if (canvas)
+			{
+				selectedObject.transform.SetParent(canvas.transform);
+				selectedObject.layer = LayerMask.NameToLayer("UI");
+			}
+			else
+			{
+				Debug.LogError("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
+				DestroyNGUI<GameObject>(selectedObject.gameObject);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static void SetNewUGUIPos(RectTransform rect, GameObject newUGUIObj, Canvas canvas, bool isSubConvert)
+    {
+        if (isSubConvert) return;
+		//CanvasScaler cs = canvas.GetComponent<CanvasScaler>();
+		float x = /*cs.referenceResolution.x / 2 **/ newUGUIObj.transform.localPosition.x;
+		float y = /*cs.referenceResolution.y / 2 **/ newUGUIObj.transform.localPosition.y;
+		Debug.LogError($"{newUGUIObj.name};  {x}, {y}");
+		SetNewUGUIParent(newUGUIObj, isSubConvert, canvas);
+		rect.anchoredPosition3D = new Vector3(x, y, 0);
 	}
 }

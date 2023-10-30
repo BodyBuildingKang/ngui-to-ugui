@@ -4,38 +4,21 @@ using UnityEngine.UI;
 public partial class ConverterMenu
 {
 	#region UILabels Converter
-	static void OnConvertUILabel(GameObject selectedObject, Canvas canvas, bool isSubConvert)
+	static void OnConvertUILabel(GameObject newUGUIObj, Canvas canvas, bool isSubConvert)
 	{
-		selectedObject.layer = LayerMask.NameToLayer("UI");
-		if (!isSubConvert)
+		RectTransform rect = newUGUIObj.GetComponent<RectTransform>();
+		if (newUGUIObj.GetComponent<UILabel>().overflowMethod == UILabel.Overflow.ResizeHeight)
 		{
-			if (canvas)
-			{
-				selectedObject.transform.SetParent(canvas.transform);
-			}
-			else
-			{
-				Debug.LogError("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyNGUI<GameObject>(selectedObject.gameObject);
-				return;
-			}
+			rect.pivot = new Vector2(newUGUIObj.GetComponent<RectTransform>().pivot.x, 1.0f);
 		}
-
-
-		RectTransform rect = selectedObject.GetComponent<RectTransform>();
-		if (selectedObject.GetComponent<UILabel>().overflowMethod == UILabel.Overflow.ResizeHeight)
-		{
-			rect.pivot = new Vector2(selectedObject.GetComponent<RectTransform>().pivot.x, 1.0f);
-		}
-
-		rect.pivot = selectedObject.GetComponent<UILabel>().pivotOffset; // TODO
-		rect.sizeDelta = selectedObject.GetComponent<UILabel>().localSize;
+		rect.pivot = newUGUIObj.GetComponent<UILabel>().pivotOffset; // TODO
+		rect.sizeDelta = newUGUIObj.GetComponent<UILabel>().localSize;
 		rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-		rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+		SetNewUGUIPos(rect, newUGUIObj, canvas, isSubConvert);
 
 
-		Text tempText = selectedObject.AddComponent<Text>();
-		UILabel originalText = selectedObject.GetComponent<UILabel>();
+		Text tempText = newUGUIObj.AddComponent<Text>();
+		UILabel originalText = newUGUIObj.GetComponent<UILabel>();
 		if (tempText != null)
 		{
 			tempText.text = originalText.text;
@@ -55,7 +38,8 @@ public partial class ConverterMenu
             switch (originalText.alignment)
             {
                 case NGUIText.Alignment.Automatic:
-					if (originalText.gameObject.transform.parent.gameObject.GetComponent<UIButton>() || originalText.gameObject.transform.parent.gameObject.GetComponent<Button>())
+					var temp = originalText.gameObject.transform.parent;
+					if (temp!= null && temp.gameObject.GetComponent<UIButton>())
 					{
 						tempText.alignment = TextAnchor.MiddleCenter;
 					}

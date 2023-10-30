@@ -7,9 +7,9 @@ using UnityEngine.UI;
 public partial class ConverterMenu
 {
 	#region UISprites Converter
-	static void OnConvertUISprite(GameObject selectedObject, Canvas canvas, bool isSubConvert)
+	static void OnConvertUISprite(GameObject newUGUIObj, Canvas canvas, bool isSubConvert)
 	{
-		UISprite sprite = selectedObject.GetComponent<UISprite>();
+		UISprite sprite = newUGUIObj.GetComponent<UISprite>();
 		if (File.Exists(AtlasConvertPath + sprite.atlas.texture.name + ".png"))
 		{
 			Debug.Log("The Atlas <color=yellow>" + sprite.atlas.texture.name + " </color>was Already Converted, Check the<color=yellow> \"Assets/NGUITOUGUI/AtlasConvert\" </color>Directory");
@@ -19,39 +19,23 @@ public partial class ConverterMenu
 			ConvertAtlas(sprite);
 		}
 
-		selectedObject.layer = LayerMask.NameToLayer("UI");
-		if (!isSubConvert)
-		{
-			if (canvas)
-			{
-				selectedObject.transform.SetParent(canvas.transform);
-			}
-			else
-			{
-				Debug.LogError("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyNGUI<GameObject>(selectedObject.gameObject);
-				return;
-			}
-		}
-
-		//to easliy control the old and the new sprites and buttons
 		Image addedImage;
 		//define the objects of the previous variables
-		if (selectedObject.GetComponent<Image>())
+		if (newUGUIObj.GetComponent<Image>())
 		{
-			addedImage = selectedObject.GetComponent<Image>();
+			addedImage = newUGUIObj.GetComponent<Image>();
 		}
 		else
 		{
-			addedImage = selectedObject.AddComponent<Image>();
+			addedImage = newUGUIObj.AddComponent<Image>();
 		}
 
-		UISprite originalSprite = selectedObject.GetComponent<UISprite>();
-		RectTransform rect = selectedObject.GetComponent<RectTransform>();
+		UISprite originalSprite = newUGUIObj.GetComponent<UISprite>();
+		RectTransform rect = newUGUIObj.GetComponent<RectTransform>();
 		rect.pivot = originalSprite.pivotOffset;
 		rect.sizeDelta = originalSprite.localSize;
 		rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-		rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+		SetNewUGUIPos(rect, newUGUIObj, canvas, isSubConvert);
 
 		Sprite[] sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(AtlasConvertPath + originalSprite.atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 		for (int c = 0; c < sprites.Length; c++)

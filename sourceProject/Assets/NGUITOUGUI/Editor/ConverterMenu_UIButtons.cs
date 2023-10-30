@@ -6,26 +6,10 @@ using UnityEngine.UI;
 public partial class ConverterMenu
 {
 	#region UIButtons Converter
-	static void OnConvertUIButton(GameObject selectedObject, Canvas canvas, bool isSubConvert)
+	static void OnConvertUIButton(GameObject newUGUIObj, Canvas canvas, bool isSubConvert)
 	{
-		if (selectedObject.GetComponent<Scrollbar>() || selectedObject.GetComponent<Slider>())
-		{
+		if (newUGUIObj.GetComponent<Scrollbar>() || newUGUIObj.GetComponent<Slider>()){
 			return;
-		}
-
-		selectedObject.layer = LayerMask.NameToLayer("UI");
-		if (!isSubConvert)
-		{
-			if (GameObject.FindObjectOfType<Canvas>())
-			{
-				selectedObject.transform.SetParent(GameObject.FindObjectOfType<Canvas>().transform);
-			}
-			else
-			{
-				Debug.LogError("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-				DestroyNGUI<GameObject>(selectedObject.gameObject);
-				return;
-			}
 		}
 
 		//to easliy control the old and the new sprites and buttons
@@ -33,21 +17,21 @@ public partial class ConverterMenu
 		UIButton originalButton;
 
 		//define the objects of the previous variables
-		if (selectedObject.GetComponent<Button>())
+		if (newUGUIObj.GetComponent<Button>())
 		{
-			addedButton = selectedObject.GetComponent<Button>();
+			addedButton = newUGUIObj.GetComponent<Button>();
 		}
 		else
 		{
-			addedButton = selectedObject.AddComponent<Button>();
+			addedButton = newUGUIObj.AddComponent<Button>();
 		}
-		originalButton = selectedObject.GetComponent<UIButton>();
+		originalButton = newUGUIObj.GetComponent<UIButton>();
 
 
-		RectTransform rect = selectedObject.GetComponent<RectTransform>();
+		RectTransform rect = newUGUIObj.GetComponent<RectTransform>();
 		if (rect == null)
 		{
-			rect = selectedObject.AddComponent<RectTransform>();
+			rect = newUGUIObj.AddComponent<RectTransform>();
 		}
 		if (originalButton.GetComponent<UISprite>())
 		{
@@ -64,8 +48,8 @@ public partial class ConverterMenu
 			rect.sizeDelta = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().localSize;
 			rect.pivot = originalButton.GetComponent<UIButton>().tweenTarget.GetComponent<UISprite>().pivotOffset;
 		}
-		selectedObject.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
-		rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+		newUGUIObj.GetComponent<RectTransform>().localScale = new Vector3(1.0f, 1.0f, 1.0f);
+		SetNewUGUIPos(rect, newUGUIObj, canvas, isSubConvert);
 
 		//if the object ahve no UISprites, then a sub object must have!
 		Sprite[] sprites;
@@ -78,7 +62,7 @@ public partial class ConverterMenu
 			sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(AtlasConvertPath + originalButton.gameObject.GetComponentInChildren<UISprite>().atlas.texture.name + ".png").OfType<Sprite>().ToArray();
 		}
 
-		if (selectedObject.gameObject.GetComponent<UIToggle>())
+		if (newUGUIObj.gameObject.GetComponent<UIToggle>())
 		{
 
 		}
@@ -116,7 +100,7 @@ public partial class ConverterMenu
 			addedButton.colors = tempColor;
 		}
 
-		if (selectedObject.gameObject.GetComponent<UIToggle>())
+		if (newUGUIObj.gameObject.GetComponent<UIToggle>())
 		{
 
 		}
@@ -137,26 +121,26 @@ public partial class ConverterMenu
 		}
 
 		//check if the parent was converted into a scrollbar
-		if (selectedObject.transform.GetComponentInParent<Scrollbar>())
+		if (newUGUIObj.transform.GetComponentInParent<Scrollbar>())
 		{
-			selectedObject.transform.GetComponentInParent<Scrollbar>().handleRect = selectedObject.GetComponent<RectTransform>();
-			selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(selectedObject.GetComponent<UISprite>().rightAnchor.absolute * 2
-																				, selectedObject.GetComponent<UISprite>().topAnchor.absolute * 2);
+			newUGUIObj.transform.GetComponentInParent<Scrollbar>().handleRect = newUGUIObj.GetComponent<RectTransform>();
+			newUGUIObj.GetComponent<RectTransform>().sizeDelta = new Vector2(newUGUIObj.GetComponent<UISprite>().rightAnchor.absolute * 2
+																				, newUGUIObj.GetComponent<UISprite>().topAnchor.absolute * 2);
 		}
 
 		//check if the parent was converted into a slider
-		if (selectedObject.transform.GetComponentInParent<Slider>())
+		if (newUGUIObj.transform.GetComponentInParent<Slider>())
 		{
-			selectedObject.transform.GetComponentInParent<Slider>().handleRect = selectedObject.GetComponent<RectTransform>();
-			if (selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.LeftToRight || selectedObject.transform.GetComponentInParent<Slider>().direction == Slider.Direction.RightToLeft)
+			newUGUIObj.transform.GetComponentInParent<Slider>().handleRect = newUGUIObj.GetComponent<RectTransform>();
+			if (newUGUIObj.transform.GetComponentInParent<Slider>().direction == Slider.Direction.LeftToRight || newUGUIObj.transform.GetComponentInParent<Slider>().direction == Slider.Direction.RightToLeft)
 			{
-				selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.x)
-																					, Mathf.Abs(selectedObject.GetComponent<UISprite>().topAnchor.absolute * 2));
+				newUGUIObj.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(newUGUIObj.GetComponent<UISprite>().localSize.x)
+																					, Mathf.Abs(newUGUIObj.GetComponent<UISprite>().topAnchor.absolute * 2));
 			}
 			else
 			{
-				selectedObject.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(selectedObject.GetComponent<UISprite>().leftAnchor.absolute * 2),
-																					Mathf.Abs(selectedObject.GetComponent<UISprite>().localSize.y));
+				newUGUIObj.GetComponent<RectTransform>().sizeDelta = new Vector2(Mathf.Abs(newUGUIObj.GetComponent<UISprite>().leftAnchor.absolute * 2),
+																					Mathf.Abs(newUGUIObj.GetComponent<UISprite>().localSize.y));
 			}
 		}
 	}

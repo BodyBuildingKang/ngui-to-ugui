@@ -6,47 +6,28 @@ using UnityEngine.UI;
 public partial class ConverterMenu
 {
 	#region UIToggles Converter
-	static void OnConvertUIToggle(GameObject selectedObject, Canvas canvas, bool isSubConvert)
+	static void OnConvertUIToggle(GameObject newUGUIObj, Canvas canvas, bool isSubConvert)
 	{
-		if (selectedObject.GetComponent<uUIToggle>())
+		if (!newUGUIObj.GetComponent<uUIToggle>())
 		{
-			return;
-		}
-		else
-		{
-			selectedObject.layer = LayerMask.NameToLayer("UI");
-			if (!isSubConvert)
-			{
-				if (canvas)
-				{
-					selectedObject.transform.SetParent(canvas.transform);
-				}
-				else
-				{
-					Debug.LogError("<Color=red>The is no CANVAS in the scene</Color>, <Color=yellow>Please Add a canvas and adjust it</Color>");
-					DestroyNGUI<GameObject>(selectedObject.gameObject);
-					return;
-				}
-			}
 
-
-			RectTransform rect = selectedObject.GetComponent<RectTransform>();
-			rect.pivot = selectedObject.GetComponent<UIWidget>().pivotOffset;
-			rect.sizeDelta = selectedObject.GetComponent<UIWidget>().localSize;
+			RectTransform rect = newUGUIObj.GetComponent<RectTransform>();
+			rect.pivot = newUGUIObj.GetComponent<UIWidget>().pivotOffset;
+			rect.sizeDelta = newUGUIObj.GetComponent<UIWidget>().localSize;
 			rect.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
+			SetNewUGUIPos(rect, newUGUIObj, canvas, isSubConvert);
 
-			Toggle addedToggle = selectedObject.AddComponent<Toggle>();
-			uUIToggle addedToggleController = selectedObject.AddComponent<uUIToggle>();
+			Toggle addedToggle = newUGUIObj.AddComponent<Toggle>();
+			uUIToggle addedToggleController = newUGUIObj.AddComponent<uUIToggle>();
 			//addedToggle
-			addedToggleController.Group = selectedObject.GetComponent<UIToggle>().group;
-			addedToggleController.StateOfNone = selectedObject.GetComponent<UIToggle>().optionCanBeNone;
-			addedToggleController.startingState = selectedObject.GetComponent<UIToggle>().startsActive;
+			addedToggleController.Group = newUGUIObj.GetComponent<UIToggle>().group;
+			addedToggleController.StateOfNone = newUGUIObj.GetComponent<UIToggle>().optionCanBeNone;
+			addedToggleController.startingState = newUGUIObj.GetComponent<UIToggle>().startsActive;
 
-			UISprite[] childImages = selectedObject.GetComponentsInChildren<UISprite>(); //not using <Image>() because the child have not been converted yet
+			UISprite[] childImages = newUGUIObj.GetComponentsInChildren<UISprite>(); //not using <Image>() because the child have not been converted yet
 			for (int x = 0; x < childImages.Length; x++)
 			{
-				if (childImages[x].spriteName == selectedObject.GetComponent<UIToggle>().activeSprite.gameObject.GetComponent<UISprite>().spriteName)
+				if (childImages[x].spriteName == newUGUIObj.GetComponent<UIToggle>().activeSprite.gameObject.GetComponent<UISprite>().spriteName)
 				{
 					Sprite[] sprites;
 					sprites = AssetDatabase.LoadAllAssetRepresentationsAtPath(AtlasConvertPath + childImages[x].atlas.texture.name + ".png").OfType<Sprite>().ToArray();
@@ -59,8 +40,8 @@ public partial class ConverterMenu
 					}
 				}
 			}
-			addedToggleController.m_Animation = selectedObject.GetComponent<UIToggle>().activeAnimation;
+			addedToggleController.m_Animation = newUGUIObj.GetComponent<UIToggle>().activeAnimation;
 		}
+		#endregion
 	}
-	#endregion
 }
