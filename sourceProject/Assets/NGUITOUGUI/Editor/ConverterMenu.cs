@@ -240,19 +240,22 @@ public partial class ConverterMenu : MonoBehaviour {
 	}
 
 	private static List<T> GetChildCmp<T>(GameObject root)
-    {
+	{
 		List<T> ls = new List<T>();
-        for (int i = 0; i < root.transform.childCount; i++)
-        {
-			var temp = root.transform.GetChild(i).GetComponent<T>();
-            if (temp != null)
-            {
-				ls.Add(temp);
+		for (int i = 0; i < root.transform.childCount; i++)
+		{
+			var temp = root.transform.GetChild(i).GetComponentsInChildren<T>();
+			if (temp != null)
+			{
+				for (int j = 0; j < temp.Length; j++)
+				{
+					ls.Add(temp[j]);
+				}
 			}
 		}
 		return ls;
-    }
-		
+	}
+
 	static void OnAdjustSliders (GameObject selectedObject){
 		if (selectedObject.GetComponent<Slider>()){
 			Vector3 tempPos = selectedObject.GetComponent<Slider>().fillRect.gameObject.GetComponent<RectTransform>().localPosition;
