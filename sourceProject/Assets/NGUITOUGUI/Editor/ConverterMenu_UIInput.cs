@@ -29,57 +29,57 @@ public partial class ConverterMenu
 			rect.anchoredPosition3D = new Vector3(-rect.anchoredPosition3D.x, rect.anchoredPosition3D.y, 0);
 
 			InputField newInputField = selectedObject.AddComponent<InputField>();
+			UIInput uI = selectedObject.GetComponent<UIInput>();
 			ColorBlock tempColor = newInputField.colors;
-			tempColor.normalColor = selectedObject.GetComponent<UIInput>().activeTextColor;
-			tempColor.pressedColor = selectedObject.GetComponent<UIInput>().caretColor;
-			tempColor.highlightedColor = selectedObject.GetComponent<UIInput>().selectionColor;
+			tempColor.normalColor = uI.activeTextColor;
+			tempColor.pressedColor = uI.caretColor;
+			tempColor.highlightedColor = uI.selectionColor;
 			//mising the disabled/inactive
 			newInputField.colors = tempColor;
 
-			newInputField.text = selectedObject.GetComponent<UIInput>().value;
-			newInputField.characterLimit = selectedObject.GetComponent<UIInput>().characterLimit;
+			newInputField.text = uI.value;
+			newInputField.characterLimit = uI.characterLimit;
 			newInputField.textComponent = newInputField.gameObject.GetComponentInChildren<Text>();
-
-			if (selectedObject.GetComponent<UIInput>().inputType == UIInput.InputType.Standard)
+            if (uI.inputType == UIInput.InputType.Standard)
 			{
 				newInputField.contentType = InputField.ContentType.Standard;
 			}
-			else if (selectedObject.GetComponent<UIInput>().inputType == UIInput.InputType.AutoCorrect)
+			else if (uI.inputType == UIInput.InputType.AutoCorrect)
 			{
 				newInputField.contentType = InputField.ContentType.Autocorrected;
 			}
-			else if (selectedObject.GetComponent<UIInput>().inputType == UIInput.InputType.Password)
+			else if (uI.inputType == UIInput.InputType.Password)
 			{
 				newInputField.contentType = InputField.ContentType.Password;
 			}
-			else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Integer)
+			else if (uI.validation == UIInput.Validation.Integer)
 			{
 				newInputField.contentType = InputField.ContentType.IntegerNumber;
 			}
-			else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Float)
+			else if (uI.validation == UIInput.Validation.Float)
 			{
 				newInputField.contentType = InputField.ContentType.DecimalNumber;
 			}
-			else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Alphanumeric)
+			else if (uI.validation == UIInput.Validation.Alphanumeric)
 			{
 				newInputField.contentType = InputField.ContentType.Alphanumeric;
 			}
-			else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Username)
+			else if (uI.validation == UIInput.Validation.Username)
 			{
 				newInputField.contentType = InputField.ContentType.EmailAddress;
 			}
-			else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.Name)
+			else if (uI.validation == UIInput.Validation.Name)
 			{
 				newInputField.contentType = InputField.ContentType.Name;
 			}
-			else if (selectedObject.GetComponent<UIInput>().validation == UIInput.Validation.None)
+			else if (uI.validation == UIInput.Validation.None)
 			{
 				newInputField.contentType = InputField.ContentType.Custom;
 			}
 
 			Debug.Log("UIInput have been done !!!!");
-			//newInputField.colors
-		}
-	}
-	#endregion
+            //newInputField.colors
+        }
+    }
+    #endregion
 }

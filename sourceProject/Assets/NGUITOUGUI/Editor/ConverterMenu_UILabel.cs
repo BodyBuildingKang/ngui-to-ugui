@@ -52,40 +52,40 @@ public partial class ConverterMenu
 				tempText.lineSpacing = 1 /*originalText.spacingY*/;
 			}
 
-			if (originalText.alignment == NGUIText.Alignment.Automatic)
-			{
-				if (originalText.gameObject.transform.parent.gameObject.GetComponent<UIButton>() || originalText.gameObject.transform.parent.gameObject.GetComponent<Button>())
-				{
-					tempText.alignment = TextAnchor.MiddleCenter;
-				}
-				else
-				{
+            switch (originalText.alignment)
+            {
+                case NGUIText.Alignment.Automatic:
+					if (originalText.gameObject.transform.parent.gameObject.GetComponent<UIButton>() || originalText.gameObject.transform.parent.gameObject.GetComponent<Button>())
+					{
+						tempText.alignment = TextAnchor.MiddleCenter;
+					}
+					else
+					{
+						tempText.alignment = TextAnchor.UpperLeft;
+					}
+					break;
+                case NGUIText.Alignment.Left:
 					tempText.alignment = TextAnchor.UpperLeft;
-				}
-			}
-			else if (originalText.alignment == NGUIText.Alignment.Center)
-			{
-				tempText.alignment = TextAnchor.MiddleCenter;
-			}
-			else if (originalText.alignment == NGUIText.Alignment.Justified)
-			{
-				tempText.alignment = TextAnchor.MiddleLeft;
-			}
-			else if (originalText.alignment == NGUIText.Alignment.Left)
-			{
-				tempText.alignment = TextAnchor.UpperLeft;
-			}
-			else if (originalText.alignment == NGUIText.Alignment.Right)
-			{
-				tempText.alignment = TextAnchor.UpperRight;
-			}
-		}
+					break;
+                case NGUIText.Alignment.Center:
+					tempText.alignment = TextAnchor.MiddleCenter;
+                    break;
+                case NGUIText.Alignment.Right:
+					tempText.alignment = TextAnchor.UpperRight;
+					break;
+                case NGUIText.Alignment.Justified:
+					tempText.alignment = TextAnchor.MiddleLeft;
+					break;
+                default:
+					break;
+            }
+        }
 
-		if (originalText.gameObject.GetComponent<TypewriterEffect>())
+        if (originalText.gameObject.GetComponent<TypewriterEffect>())
 		{
 			originalText.gameObject.AddComponent<uUITypewriterEffect>();
 			DestroyNGUI<TypewriterEffect>(originalText.gameObject.GetComponent<TypewriterEffect>());
 		}
-	}
-	#endregion
+    }
+    #endregion
 }

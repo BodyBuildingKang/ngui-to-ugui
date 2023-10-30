@@ -10,11 +10,7 @@ public partial class ConverterMenu
 		uUIPopupList newPopuplist;
 		tempObject = selectedObject;
 
-		if (tempObject.GetComponent<uUIPopupList>())
-		{
-
-		}
-		else
+		if (!tempObject.GetComponent<uUIPopupList>())
 		{
 			tempObject.layer = LayerMask.NameToLayer("UI");
 
